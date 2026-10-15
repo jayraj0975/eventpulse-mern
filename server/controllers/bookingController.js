@@ -21,6 +21,10 @@ exports.bookEvent = async (req, res) => {
     try {
         const { eventId, otp } = req.body;
 
+        if (!eventId || !otp) {
+            return res.status(400).json({ message: 'Event ID and OTP are required' });
+        }
+
         // Verify OTP explicitly before proceeding
         const validOTP = await OTP.findOne({ email: req.user.email, otp, action: 'event_booking' });
         if (!validOTP) {
@@ -29,11 +33,16 @@ exports.bookEvent = async (req, res) => {
 
         const event = await Event.findById(eventId);
         if (!event) return res.status(404).json({ message: 'Event not found' });
-        if (event.availableSeats <= 0) return res.status(400).json({ message: 'No seats available' });
+        if (event.availableSeats <= 0) return res.status(400).json({ message: 'No seats available for this event' });
 
-        const existingBooking = await Booking.findOne({ userId: req.user.id, eventId });
-        if (existingBooking && existingBooking.status !== 'cancelled') {
-            return res.status(400).json({ message: 'Already booked or pending' });
+        // Check for existing active/pending booking
+        const existingBooking = await Booking.findOne({ 
+            userId: req.user.id, 
+            eventId, 
+            status: { $ne: 'cancelled' } 
+        });
+        if (existingBooking) {
+            return res.status(400).json({ message: 'You already have an active or pending booking for this event' });
         }
 
         const booking = await Booking.create({
@@ -44,10 +53,14 @@ exports.bookEvent = async (req, res) => {
             amount: event.ticketPrice
         });
 
-        await OTP.deleteOne({ _id: validOTP._id }); // cleanup
+        await OTP.deleteOne({ _id: validOTP._id }); // cleanup OTP
 
-        res.status(201).json({ message: 'Booking request submitted', booking });
+        res.status(201).json({ message: 'Booking request submitted successfully', booking });
     } catch (error) {
+        // Handle MongoDB partial unique index violation (duplicate key code 11000)
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'You already have an active or pending booking for this event' });
+        }
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -58,26 +71,46 @@ exports.confirmBooking = async (req, res) => {
         const booking = await Booking.findById(req.params.id).populate('userId').populate('eventId');
         if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
-        if (booking.status === 'confirmed') return res.status(400).json({ message: 'Booking is already confirmed' });
+        if (booking.status === 'confirmed') {
+            return res.status(400).json({ message: 'Booking is already confirmed' });
+        }
+        if (booking.status === 'cancelled') {
+            return res.status(400).json({ message: 'Cannot confirm a cancelled booking' });
+        }
 
-        const event = await Event.findById(booking.eventId._id);
-        if (event.availableSeats <= 0) {
+        // Step 1: Atomic conditional seat decrement on Event (prevents race conditions)
+        const updatedEvent = await Event.findOneAndUpdate(
+            { _id: booking.eventId._id, availableSeats: { $gt: 0 } },
+            { $inc: { availableSeats: -1 } },
+            { new: true }
+        );
+
+        if (!updatedEvent) {
             return res.status(400).json({ message: 'No seats available to confirm this booking' });
         }
 
-        booking.status = 'confirmed';
-        if (paymentStatus) {
-            booking.paymentStatus = paymentStatus;
-        }
-        await booking.save();
+        // Step 2: Atomic state transition on Booking
+        const updatedBooking = await Booking.findOneAndUpdate(
+            { _id: booking._id, status: 'pending' },
+            { 
+                status: 'confirmed',
+                ...(paymentStatus ? { paymentStatus } : {})
+            },
+            { new: true }
+        );
 
-        event.availableSeats -= 1;
-        await event.save();
+        if (!updatedBooking) {
+            // Rollback seat decrement if booking was concurrently modified
+            await Event.findByIdAndUpdate(booking.eventId._id, { $inc: { availableSeats: 1 } });
+            return res.status(400).json({ message: 'Booking status could not be updated (may have been changed)' });
+        }
 
         // Send email on admin confirmation
-        await sendBookingEmail(booking.userId.email, booking.userId.name, booking.eventId.title);
+        if (booking.userId && booking.userId.email) {
+            await sendBookingEmail(booking.userId.email, booking.userId.name, booking.eventId.title);
+        }
 
-        res.json({ message: 'Booking confirmed successfully', booking });
+        res.json({ message: 'Booking confirmed successfully', booking: updatedBooking });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -96,25 +129,39 @@ exports.getMyBookings = async (req, res) => {
 
 exports.cancelBooking = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ message: 'Booking not found' });
-        if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Not authorized' });
+        const query = { _id: req.params.id };
+        if (req.user.role !== 'admin') {
+            query.userId = req.user.id;
         }
-        if (booking.status === 'cancelled') return res.status(400).json({ message: 'Already cancelled' });
+
+        const booking = await Booking.findOne(query);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found or not authorized' });
+        }
+
+        if (booking.status === 'cancelled') {
+            return res.status(400).json({ message: 'Booking is already cancelled' });
+        }
 
         const wasConfirmed = booking.status === 'confirmed';
 
-        booking.status = 'cancelled';
-        await booking.save();
+        // Atomic update to cancelled
+        const updatedBooking = await Booking.findOneAndUpdate(
+            { _id: booking._id, status: { $ne: 'cancelled' } },
+            { status: 'cancelled' },
+            { new: true }
+        );
 
-        // Only restore the seat if it was actually confirmed and deducted
+        if (!updatedBooking) {
+            return res.status(400).json({ message: 'Booking was already cancelled' });
+        }
+
+        // Atomically restore available seat only if booking was previously confirmed
         if (wasConfirmed) {
-            const event = await Event.findById(booking.eventId);
-            if (event) {
-                event.availableSeats += 1;
-                await event.save();
-            }
+            await Event.findByIdAndUpdate(
+                booking.eventId,
+                { $inc: { availableSeats: 1 } }
+            );
         }
 
         res.json({ message: 'Booking cancelled successfully' });

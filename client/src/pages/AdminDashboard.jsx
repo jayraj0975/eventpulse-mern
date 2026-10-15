@@ -8,6 +8,10 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [bookings, setBookings] = useState([]);
+    const [analyticsKpis, setAnalyticsKpis] = useState(null);
+    const [statusSummary, setStatusSummary] = useState([]);
+    const [popularityRanking, setPopularityRanking] = useState([]);
+    const [showAnalyticsSection, setShowAnalyticsSection] = useState(true);
     const [loading, setLoading] = useState(true);
 
     const [showEventForm, setShowEventForm] = useState(false);
@@ -25,12 +29,18 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
         try {
-            const [eventsRes, bookingsRes] = await Promise.all([
+            const [eventsRes, bookingsRes, kpiRes, statusRes, popularityRes] = await Promise.all([
                 api.get('/events'),
-                api.get('/bookings/my') // Admin gets all bookings
+                api.get('/bookings/my'), // Admin gets all bookings
+                api.get('/analytics/overview'),
+                api.get('/analytics/booking-status'),
+                api.get('/analytics/event-popularity')
             ]);
             setEvents(eventsRes.data);
             setBookings(bookingsRes.data);
+            setAnalyticsKpis(kpiRes.data.kpis);
+            setStatusSummary(statusRes.data.data);
+            setPopularityRanking(popularityRes.data.data);
         } catch (error) {
             console.error('Error fetching admin data', error);
         } finally {
@@ -87,41 +97,159 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto">
             <div className="bg-black text-white rounded-2xl p-6 sm:p-8 mb-8 shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
                 <div>
+                    <div className="inline-block bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 border border-green-500/30">
+                        ⚡ MongoDB Aggregations Active
+                    </div>
                     <h1 className="text-2xl sm:text-3xl font-extrabold mb-2">Admin Dashboard</h1>
-                    <p className="text-gray-300">Manage events and manually confirm bookings.</p>
+                    <p className="text-gray-300">Manage events, verify booking requests, and inspect real database analytics.</p>
                 </div>
-                <button
-                    onClick={() => setShowEventForm(!showEventForm)}
-                    className="w-full md:w-auto bg-white text-black font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition shadow-md"
-                >
-                    {showEventForm ? 'Cancel Creation' : '+ Create New Event'}
-                </button>
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        onClick={() => setShowAnalyticsSection(!showAnalyticsSection)}
+                        className="bg-gray-800 text-white font-bold py-3 px-5 rounded-lg hover:bg-gray-700 transition border border-gray-700 shadow-md text-sm"
+                    >
+                        {showAnalyticsSection ? 'Hide AD Reports' : 'View AD Reports'}
+                    </button>
+                    <button
+                        onClick={() => setShowEventForm(!showEventForm)}
+                        className="bg-white text-black font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition shadow-md text-sm"
+                    >
+                        {showEventForm ? 'Cancel Creation' : '+ Create New Event'}
+                    </button>
+                </div>
             </div>
 
-            {/* Admin Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Admin Stats Row (Sourced directly from MongoDB $facet Aggregation) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Total Revenue</p>
-                        <h3 className="text-3xl font-black text-green-600">₹{bookings.reduce((sum, b) => b.paymentStatus === 'paid' && b.status === 'confirmed' ? sum + b.amount : sum, 0)}</h3>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Verified Revenue</p>
+                        <h3 className="text-3xl font-black text-green-600">₹{analyticsKpis?.totalRevenue ?? 0}</h3>
+                        <p className="text-[11px] text-gray-400 mt-1">Confirmed & Paid only</p>
                     </div>
-                    <div className="w-12 h-12 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xl font-bold">₹</div>
+                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl font-bold">₹</div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Paid Clients</p>
-                        <h3 className="text-3xl font-black text-blue-600">{new Set(bookings.filter(b => b.paymentStatus === 'paid' && b.status === 'confirmed').map(b => b.userId?._id)).size}</h3>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Paid Clients</p>
+                        <h3 className="text-3xl font-black text-blue-600">{analyticsKpis?.paidClients ?? 0}</h3>
+                        <p className="text-[11px] text-gray-400 mt-1">Unique customers</p>
                     </div>
                     <div className="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xl font-bold">👤</div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-1">Pending Requests</p>
-                        <h3 className="text-3xl font-black text-yellow-600">{bookings.filter(b => b.status === 'pending').length}</h3>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Pending Requests</p>
+                        <h3 className="text-3xl font-black text-yellow-600">{analyticsKpis?.pendingRequests ?? 0}</h3>
+                        <p className="text-[11px] text-gray-400 mt-1">Awaiting approval</p>
                     </div>
                     <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-xl font-bold">⏳</div>
                 </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Confirmed Bookings</p>
+                        <h3 className="text-3xl font-black text-indigo-600">{analyticsKpis?.confirmedBookings ?? 0}</h3>
+                        <p className="text-[11px] text-gray-400 mt-1">Total active tickets</p>
+                    </div>
+                    <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl font-bold">🎟️</div>
+                </div>
             </div>
+
+            {/* AD Aggregation Reports Showcase Section */}
+            {showAnalyticsSection && (
+                <div className="bg-white rounded-2xl p-6 sm:p-8 mb-8 shadow-sm border border-gray-100">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+                        <div>
+                            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
+                                📊 MongoDB Aggregation Reports
+                                <span className="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-bold">AD Mini-Project</span>
+                            </h2>
+                            <p className="text-sm text-gray-500">Live analytics computed directly by MongoDB aggregation pipelines ($match, $group, $lookup, $sort).</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Report 1: Booking Status Breakdown */}
+                        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200/70 flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-700 mb-3 flex items-center justify-between">
+                                    <span>Pipeline 1: Status Summary</span>
+                                    <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded text-gray-600 font-mono">$group</span>
+                                </h3>
+                                <div className="space-y-3">
+                                    {statusSummary.length === 0 ? (
+                                        <p className="text-gray-400 text-sm">No bookings recorded.</p>
+                                    ) : (
+                                        statusSummary.map((item) => (
+                                            <div key={item.status} className="bg-white p-3 rounded-lg border border-gray-100 flex items-center justify-between">
+                                                <div>
+                                                    <span className={`px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${
+                                                        item.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                                        item.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                                    }`}>
+                                                        {item.status}
+                                                    </span>
+                                                    <p className="text-xs text-gray-500 mt-1">Paid: {item.paidCount} | Unpaid: {item.unpaidCount}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-lg font-black text-gray-900">{item.count}</span>
+                                                    <p className="text-[11px] text-gray-400">₹{item.totalAmountRequested}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-4 pt-2 border-t border-gray-200">
+                                Stages: <code>$group (_id: '$status')</code> → <code>$project</code> → <code>$sort</code>
+                            </p>
+                        </div>
+
+                        {/* Report 2 & 3: Popularity & Verified Revenue Ranking */}
+                        <div className="lg:col-span-2 bg-gray-50 rounded-xl p-5 border border-gray-200/70 flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-sm font-extrabold uppercase tracking-wider text-gray-700 mb-3 flex items-center justify-between">
+                                    <span>Pipeline 2 & 3: Event Popularity & Revenue Ranking</span>
+                                    <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded text-gray-600 font-mono">$match + $lookup + $sort</span>
+                                </h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs bg-white rounded-lg border border-gray-100 overflow-hidden">
+                                        <thead className="bg-gray-100 text-gray-600 uppercase text-[10px] font-bold">
+                                            <tr>
+                                                <th className="p-3">Event Title</th>
+                                                <th className="p-3">Category</th>
+                                                <th className="p-3 text-center">Confirmed</th>
+                                                <th className="p-3 text-right">Paid Revenue</th>
+                                                <th className="p-3 text-right">Available</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {popularityRanking.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" className="p-4 text-center text-gray-400">No confirmed bookings yet.</td>
+                                                </tr>
+                                            ) : (
+                                                popularityRanking.map((event, idx) => (
+                                                    <tr key={event.eventId || idx} className="hover:bg-gray-50">
+                                                        <td className="p-3 font-semibold text-gray-900">{event.eventTitle}</td>
+                                                        <td className="p-3 text-gray-500">{event.category}</td>
+                                                        <td className="p-3 text-center font-bold text-indigo-600">{event.confirmedBookings}</td>
+                                                        <td className="p-3 text-right font-black text-green-600">₹{event.paidRevenue}</td>
+                                                        <td className="p-3 text-right text-gray-500">{event.availableSeats}/{event.totalSeats}</td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-4 pt-2 border-t border-gray-200">
+                                Stages: <code>$match (confirmed)</code> → <code>$group ($sum)</code> → <code>$lookup (events)</code> → <code>$sort (demand desc)</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showEventForm && (
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8 animation-slideDown">

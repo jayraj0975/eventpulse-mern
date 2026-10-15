@@ -23,10 +23,14 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         <p>Thank you for choosing Eventora.</p>
       `
         };
-        await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully to', userEmail);
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            await transporter.sendMail(mailOptions);
+            console.log('📧 Booking confirmation email sent successfully to', userEmail);
+        } else {
+            console.log(`ℹ️ [Email Skipped] Booking confirmation email for ${userEmail} (${eventTitle}) logged in dev mode.`);
+        }
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email:', error.message);
     }
 };
 
@@ -52,10 +56,15 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-        await transporter.sendMail(mailOptions);
-        console.log(`OTP sent to ${userEmail} for ${type}`);
+        console.log(`\n========================================\n🔑 [EVENTORA OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            await transporter.sendMail(mailOptions);
+            console.log(`📧 OTP email sent to ${userEmail} for ${type}`);
+        } else {
+            console.log(`ℹ️ [Email Skipped] EMAIL_USER/EMAIL_PASS not configured. Using console OTP above.`);
+        }
     } catch (error) {
-        console.error('Error sending OTP email:', error);
+        console.error('Error sending OTP email:', error.message);
     }
 };
 

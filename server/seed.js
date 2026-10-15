@@ -93,6 +93,12 @@ const seedDatabase = async () => {
         await Booking.deleteMany();
         console.log('🗑️  Cleared existing data.');
 
+        // Build / synchronize all schema indexes
+        await User.syncIndexes();
+        await Event.syncIndexes();
+        await Booking.syncIndexes();
+        console.log('⚡ Schema indexes synchronized successfully.');
+
         // Hash user passwords
         const salt = await bcrypt.genSalt(10);
         const hashedUsers = users.map(u => ({

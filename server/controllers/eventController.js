@@ -46,7 +46,19 @@ exports.createEvent = async (req, res) => {
 
 exports.updateEvent = async (req, res) => {
     try {
-        const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const allowedUpdates = ['title', 'description', 'date', 'location', 'category', 'totalSeats', 'ticketPrice', 'image'];
+        const updates = {};
+        for (const key of allowedUpdates) {
+            if (req.body[key] !== undefined) {
+                updates[key] = req.body[key];
+            }
+        }
+
+        const event = await Event.findByIdAndUpdate(
+            req.params.id, 
+            updates, 
+            { new: true, runValidators: true }
+        );
         if (!event) return res.status(404).json({ message: 'Event not found' });
         res.json(event);
     } catch (error) {
