@@ -88,16 +88,24 @@ const seedDatabase = async () => {
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora');
         console.log('\n✅ MongoDB connection open...');
 
-        await User.deleteMany();
-        await Event.deleteMany();
-        await Booking.deleteMany();
-        console.log('🗑️  Cleared existing data.');
-
         // Build / synchronize all schema indexes
         await User.syncIndexes();
         await Event.syncIndexes();
         await Booking.syncIndexes();
         console.log('⚡ Schema indexes synchronized successfully.');
+
+        const existingUsersCount = await User.countDocuments();
+        const forceReseed = process.argv.includes('--force');
+
+        if (existingUsersCount > 0 && !forceReseed) {
+            console.log(`ℹ️ Database already contains ${existingUsersCount} users. Skipping reseed to preserve live data. (Use --force to override).`);
+            process.exit(0);
+        }
+
+        await User.deleteMany();
+        await Event.deleteMany();
+        await Booking.deleteMany();
+        console.log('🗑️  Cleared existing data.');
 
         // Hash user passwords
         const salt = await bcrypt.genSalt(10);

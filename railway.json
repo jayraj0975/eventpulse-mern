@@ -2,10 +2,10 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "cd server && npm install --legacy-peer-deps && node seed.js"
+    "buildCommand": "cd server && npm install --legacy-peer-deps"
   },
   "deploy": {
-    "startCommand": "cd server && node server.js",
+    "startCommand": "cd server && node seed.js && node server.js",
     "healthcheckPath": "/api/events",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
