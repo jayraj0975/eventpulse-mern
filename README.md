@@ -1,4 +1,4 @@
-# Eventora — Advanced Databases (AD) Mini-Project
+# EventPulse — Advanced Databases (AD) Mini-Project
 
 An event-management and ticket-booking web platform enhanced with real database engineering, designed for the **Advanced Databases (AD)** curriculum. Built on the MERN stack (MongoDB, Express, React, Node.js), this project demonstrates practical database concepts including **aggregation pipelines**, **compound & partial unique indexes**, **atomic concurrency controls**, **query plan optimization with `explain()`**, and **schema-level integrity constraints**.
 
@@ -17,7 +17,7 @@ Standard full-stack tutorials often delegate data analysis and constraint enforc
 3. **Performance Degradation:** Queries without compound indexes perform full collection scans (`COLLSCAN`), degrading as data volume scales.
 4. **False Financial Reporting:** Client-side filters frequently conflate pending or unpaid tickets with actual revenue.
 
-Eventora resolves these issues using database-native features in MongoDB 7.0 / Mongoose 8.2.
+EventPulse resolves these issues using database-native features in MongoDB 7.0 / Mongoose 8.2.
 
 ---
 

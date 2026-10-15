@@ -20,7 +20,7 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
             html: `
         <h2>Hi ${userName}!</h2>
         <p>Your booking for the event <strong>${eventTitle}</strong> is successfully confirmed.</p>
-        <p>Thank you for choosing Eventora.</p>
+        <p>Thank you for choosing EventPulse.</p>
       `
         };
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
@@ -36,9 +36,9 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
 
 const sendOTPEmail = async (userEmail, otp, type) => {
     try {
-        const title = type === 'account_verification' ? 'Verify your Eventora Account' : 'Eventora Booking Verification';
+        const title = type === 'account_verification' ? 'Verify your EventPulse Account' : 'EventPulse Booking Verification';
         const msg = type === 'account_verification'
-            ? 'Please use the following OTP to verify your new Eventora account.'
+            ? 'Please use the following OTP to verify your new EventPulse account.'
             : 'Please use the following OTP to verify and confirm your event booking.';
 
         const mailOptions = {
@@ -56,7 +56,7 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-        console.log(`\n========================================\n🔑 [EVENTORA OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
+        console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             await transporter.sendMail(mailOptions);
             console.log(`📧 OTP email sent to ${userEmail} for ${type}`);

@@ -1,4 +1,4 @@
-# Eventora — Viva Preparation & Demonstration Guide
+# EventPulse — Viva Preparation & Demonstration Guide
 
 This guide is designed for the **Advanced Databases (AD)** viva examination. It contains a 3-minute live demonstration script followed by 15 high-value examination questions with concise, technically accurate answers derived directly from the code.
 
@@ -53,7 +53,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
 
 ## Part 2: 15 Viva Questions & Model Answers
 
-### Q1: Why did you choose MongoDB instead of a traditional relational database (RDBMS) like MySQL for Eventora?
+### Q1: Why did you choose MongoDB instead of a traditional relational database (RDBMS) like MySQL for EventPulse?
 **Answer:**
 > "MongoDB provides flexible JSON document modeling with dynamic schemas, making it natural to represent rich event metadata, nested descriptions, and evolving ticket structures. For high-volume event platforms, MongoDB offers horizontal scalability through sharding, native geospatial indexing for event venues, and an expressive Aggregation Pipeline that enables real-time reporting without complex SQL joins."
 

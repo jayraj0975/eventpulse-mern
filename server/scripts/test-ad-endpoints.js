@@ -40,8 +40,8 @@ async function runTestSuite() {
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/eventora');
         console.log('Connected to MongoDB for AD Feature Verification\n');
 
-        const admin = await User.findOne({ email: 'admin@eventora.com' });
-        const user = await User.findOne({ email: 'user@eventora.com' });
+        const admin = await User.findOne({ email: 'admin@eventpulse.com' });
+        const user = await User.findOne({ email: 'user@eventpulse.com' });
 
         // -------------------------------------------------------------
         // SUITE 1: Aggregation Pipelines
