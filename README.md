@@ -247,8 +247,8 @@ Populate safe, realistic sample data (10 users, 6 categorized events, 20+ bookin
 npm run seed --prefix server
 ```
 Default accounts created:
-* **Admin Account:** `admin@eventora.com` / `password123`
-* **Demo User Account:** `user@eventora.com` / `password123`
+* **Admin Account:** `admin@eventpulse.com` / `password123`
+* **Demo User Account:** `user@eventpulse.com` / `password123`
 
 ### 4. Run the Full Application
 ```bash
