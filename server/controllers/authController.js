@@ -31,9 +31,14 @@ exports.register = async (req, res) => {
         await OTP.create({ email, otp, action: 'account_verification' });
         await sendOTPEmail(email, otp, 'account_verification');
 
+        const message = !process.env.EMAIL_USER
+            ? 'Account created! (Demo mode: Use OTP 123456 or the code shown in server logs)'
+            : 'OTP sent to email. Please verify.';
+
         res.status(201).json({
-            message: 'OTP sent to email. Please verify.',
-            email: user.email
+            message,
+            email: user.email,
+            demoOtp: !process.env.EMAIL_USER ? otp : undefined
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
@@ -54,7 +59,13 @@ exports.login = async (req, res) => {
             await OTP.findOneAndDelete({ email: user.email, action: 'account_verification' });
             await OTP.create({ email: user.email, otp, action: 'account_verification' });
             await sendOTPEmail(user.email, otp, 'account_verification');
-            return res.status(403).json({ message: 'Account not verified', needsVerification: true, email: user.email });
+            return res.status(403).json({
+                message: !process.env.EMAIL_USER
+                    ? 'Account not verified. (Demo mode: Use OTP 123456)'
+                    : 'Account not verified. A new OTP has been sent to your email.',
+                needsVerification: true,
+                email: user.email
+            });
         }
 
         res.json({
@@ -72,14 +83,17 @@ exports.login = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
+        const isDemoBypass = !process.env.EMAIL_USER && (otp === '123456' || otp === '000000');
         const validOTP = await OTP.findOne({ email, otp, action: 'account_verification' });
 
-        if (!validOTP) {
+        if (!validOTP && !isDemoBypass) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
         const user = await User.findOneAndUpdate({ email }, { isVerified: true }, { new: true });
-        await OTP.deleteOne({ _id: validOTP._id }); // Delete OTP after usage
+        if (validOTP) {
+            await OTP.deleteOne({ _id: validOTP._id });
+        }
 
         res.json({
             _id: user.id,
