@@ -3,6 +3,7 @@
 An event-management and ticket-booking web platform enhanced with real database engineering, designed for the **Advanced Databases (AD)** curriculum. Built on the MERN stack (MongoDB, Express, React, Node.js), this project demonstrates practical database concepts including **aggregation pipelines**, **compound & partial unique indexes**, **atomic concurrency controls**, **query plan optimization with `explain()`**, and **schema-level integrity constraints**.
 
 ---
+LINK- https://eventpulse-mern.vercel.app/login
 
 ## 1. Project Overview & Objective
 
