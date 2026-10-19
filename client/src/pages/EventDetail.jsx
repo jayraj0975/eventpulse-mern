@@ -40,13 +40,24 @@ const EventDetail = () => {
         setSuccessMsg('');
 
         try {
+            const isDemoUser = user.email?.toLowerCase() === 'user@eventpulse.com';
+
+            if (isDemoUser) {
+                // The backend only permits this shortcut when DEMO_MODE=true.
+                const bookingResponse = await api.post('/bookings', { eventId: event._id });
+                const bookingId = bookingResponse.data.booking._id;
+                const paymentResponse = await api.post('/bookings/' + bookingId + '/demo-pay');
+                navigate('/payment-success', { state: { demoPayment: Boolean(paymentResponse.data.demoPayment), message: paymentResponse.data.message } });
+                return;
+            }
+
             if (!showOTP) {
                 await api.post('/bookings/send-otp');
                 setShowOTP(true);
-                setSuccessMsg('OTP sent to your email. Please verify to confirm booking.');
+                setSuccessMsg('OTP sent to your email. Please verify to continue.');
             } else {
                 await api.post('/bookings', { eventId: event._id, otp });
-                setSuccessMsg('Booking request submitted! Awaiting admin approval. Check status in your Dashboard.');
+                setSuccessMsg('Booking request submitted! It is awaiting admin confirmation. Check your Dashboard.');
                 setShowOTP(false);
                 setOtp('');
             }
@@ -129,6 +140,10 @@ const EventDetail = () => {
                             </div>
                         </div>
 
+                        {user?.email?.toLowerCase() === 'user@eventpulse.com' && (
+                            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Demo account: checkout is simulated for this college demonstration. No real money will be charged.</p>
+                        )}
+
                         {showOTP && (
                             <div className="mb-4">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Enter OTP to Confirm</label>
@@ -152,7 +167,7 @@ const EventDetail = () => {
                                 : 'bg-gray-900 hover:bg-black text-white hover:shadow-xl hover:-translate-y-1'
                                 }`}
                         >
-                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Confirm' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : 'Confirm Registration')))}
+                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : (user?.email?.toLowerCase() === 'user@eventpulse.com' ? 'Demo Checkout' : 'Confirm Registration'))))}
                         </button>
                         {error && <p className="text-red-500 mt-4 text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
                         {successMsg && <p className="text-green-600 mt-4 text-center font-medium bg-green-50 p-2 rounded">{successMsg}</p>}
