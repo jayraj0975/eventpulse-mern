@@ -54,7 +54,7 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-        const isConfiguredDemoUser = process.env.DEMO_MODE === 'true' && user.email === 'user@eventpulse.com' && user.role === 'user';
+        const isConfiguredDemoUser = process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && user.email === 'user@eventpulse.com' && user.role === 'user';
         if (isConfiguredDemoUser && !user.isVerified) {
             user.isVerified = true;
             await user.save();
