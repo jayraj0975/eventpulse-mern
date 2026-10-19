@@ -20,7 +20,7 @@ exports.sendBookingOTP = async (req, res) => {
 exports.bookEvent = async (req, res) => {
     try {
         const { eventId, otp } = req.body;
-        const isDemoBooking = process.env.DEMO_MODE === 'true' && req.user.email === 'user@eventpulse.com' && req.user.role === 'user';
+        const isDemoBooking = process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && req.user.email === 'user@eventpulse.com' && req.user.role === 'user';
 
         if (!eventId || (!otp && !isDemoBooking)) {
             return res.status(400).json({ message: 'Event ID and OTP are required' });
@@ -122,7 +122,7 @@ exports.confirmBooking = async (req, res) => {
 
 exports.simulateDemoPayment = async (req, res) => {
     try {
-        if (process.env.DEMO_MODE !== 'true') {
+        if (process.env.DEMO_MODE !== 'true' || process.env.NODE_ENV === 'production') {
             return res.status(403).json({ message: 'Demo payments are disabled' });
         }
         if (req.user.role !== 'user' || req.user.email !== 'user@eventpulse.com') {
