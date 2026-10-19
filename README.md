@@ -234,6 +234,8 @@ JWT_SECRET=dev_jwt_secret_eventora_college_2026
 PORT=5000
 NODE_ENV=development
 ```
+
+For the guided college demo flow, set `DEMO_MODE=true` **only in a controlled demo environment**. This enables the seeded `user@eventpulse.com` account to skip OTP and use a clearly labelled simulated checkout. No real payment is processed. Keep `DEMO_MODE=false` in production. Never expose an admin demo account or use demo credentials for real users.
 *(Optional: If you wish to send live emails, supply `EMAIL_USER` and `EMAIL_PASS`. If left unconfigured, OTPs will print directly to the backend terminal for seamless offline testing).*
 
 ### 2. Install Dependencies
