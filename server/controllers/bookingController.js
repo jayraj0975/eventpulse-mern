@@ -131,8 +131,9 @@ exports.simulateDemoPayment = async (req, res) => {
 
         const booking = await Booking.findOne({ _id: req.params.id, userId: req.user.id }).populate('eventId');
         if (!booking) return res.status(404).json({ message: 'Booking not found' });
+        if (!booking.eventId) return res.status(404).json({ message: 'The event for this booking no longer exists' });
         if (booking.status === 'confirmed') {
-            return res.json({ message: 'Demo booking is already confirmed', booking, demoPayment: true });
+            return res.json({ message: 'Demo booking is already confirmed', booking, demoPayment: Number(booking.amount) > 0, demoFlow: true });
         }
         if (booking.status !== 'pending') {
             return res.status(400).json({ message: 'Only pending bookings can be confirmed' });
@@ -159,7 +160,7 @@ exports.simulateDemoPayment = async (req, res) => {
             await Event.findByIdAndUpdate(booking.eventId._id, { $inc: { availableSeats: 1 } });
             const latest = await Booking.findById(booking._id);
             if (latest && latest.status === 'confirmed') {
-                return res.json({ message: 'Demo booking is already confirmed', booking: latest, demoPayment: true });
+                return res.json({ message: 'Demo booking is already confirmed', booking: latest, demoPayment: Number(latest.amount) > 0, demoFlow: true });
             }
             return res.status(409).json({ message: 'Booking changed during confirmation. Please refresh and check your dashboard.' });
         }
@@ -169,7 +170,8 @@ exports.simulateDemoPayment = async (req, res) => {
                 ? 'Demo checkout completed; no real money was charged. Ticket confirmed for demonstration only.'
                 : 'Free registration confirmed for demonstration.',
             booking: updatedBooking,
-            demoPayment: booking.amount > 0
+            demoPayment: Number(booking.amount) > 0,
+            demoFlow: true
         });
     } catch (error) {
         if (error.name === 'CastError') return res.status(400).json({ message: 'Invalid booking ID' });
