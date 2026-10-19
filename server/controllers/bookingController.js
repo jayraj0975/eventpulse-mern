@@ -150,7 +150,8 @@ exports.simulateDemoPayment = async (req, res) => {
             { _id: booking._id, status: 'pending' },
             {
                 status: 'confirmed',
-                paymentStatus: booking.amount > 0 ? 'paid' : 'not_paid'
+                // A simulated checkout is not a real payment; never count it as revenue.
+                paymentStatus: 'not_paid'
             },
             { new: true }
         );
@@ -165,8 +166,8 @@ exports.simulateDemoPayment = async (req, res) => {
 
         res.json({
             message: booking.amount > 0
-                ? 'Demo payment simulated; no real money was charged. Ticket confirmed.'
-                : 'Free registration confirmed.',
+                ? 'Demo checkout completed; no real money was charged. Ticket confirmed for demonstration only.'
+                : 'Free registration confirmed for demonstration.',
             booking: updatedBooking,
             demoPayment: booking.amount > 0
         });
