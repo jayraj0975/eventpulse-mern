@@ -7,8 +7,9 @@
         "start": "node server.js",
         "dev": "nodemon server.js",
         "seed": "node seed.js",
-        "test": "node scripts/test-ad-endpoints.js && node scripts/verify-indexes-and-queries.js",
+        "test": "node scripts/test-ad-endpoints.js && node scripts/verify-indexes-and-queries.js && node scripts/test-demo-booking-flow.js",
         "test:ad": "node scripts/test-ad-endpoints.js",
+        "test:demo": "node scripts/test-demo-booking-flow.js",
         "verify:indexes": "node scripts/verify-indexes-and-queries.js"
     },
     "dependencies": {
