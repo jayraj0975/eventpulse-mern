@@ -47,7 +47,7 @@ const EventDetail = () => {
                 const bookingResponse = await api.post('/bookings', { eventId: event._id });
                 const bookingId = bookingResponse.data.booking._id;
                 const paymentResponse = await api.post('/bookings/' + bookingId + '/demo-pay');
-                navigate('/payment-success', { state: { demoPayment: Boolean(paymentResponse.data.demoPayment), message: paymentResponse.data.message } });
+                navigate('/payment-success', { state: { demoFlow: true, demoPayment: Boolean(paymentResponse.data.demoPayment), message: paymentResponse.data.message } });
                 return;
             }
 
