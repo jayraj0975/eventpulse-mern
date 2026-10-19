@@ -54,6 +54,12 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
+        const isConfiguredDemoUser = process.env.DEMO_MODE === 'true' && user.email === 'user@eventpulse.com' && user.role === 'user';
+        if (isConfiguredDemoUser && !user.isVerified) {
+            user.isVerified = true;
+            await user.save();
+        }
+
         if (!user.isVerified && user.role !== 'admin') {
             const otp = generateOTP();
             await OTP.findOneAndDelete({ email: user.email, action: 'account_verification' });
