@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const crypto = require('crypto');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 const bcrypt = require('bcryptjs');
@@ -85,7 +84,7 @@ exports.login = async (req, res) => {
             token: generateToken(user.id, user.role)
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
