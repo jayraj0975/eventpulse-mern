@@ -59,14 +59,16 @@ app.use(express.json());
 
 // Dedicated Health endpoints
 app.get('/health', (req, res) => {
-    res.json({
+    const connected = mongoose.connection.readyState === 1;
+    res.status(connected ? 200 : 503).json({
         status: 'ok',
         uptime: process.uptime(),
         database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
 });
 app.get('/api/health', (req, res) => {
-    res.json({
+    const connected = mongoose.connection.readyState === 1;
+    res.status(connected ? 200 : 503).json({
         status: 'ok',
         uptime: process.uptime(),
         database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
