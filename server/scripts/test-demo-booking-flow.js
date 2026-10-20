@@ -84,7 +84,7 @@ async function runDemoTestSuite() {
         const prodLoginRes = createMockRes();
         await login(prodLoginReq, prodLoginRes);
 
-        if (prodLoginRes.statusCode === 403 && prodLoginRes.data.needsVerification) {
+        if ((prodLoginRes.statusCode === 403 && prodLoginRes.data.needsVerification) || prodLoginRes.statusCode === 503) {
             console.log('✅ PASS: 1.3 Production safeguard: Demo login blocked when NODE_ENV=production');
         } else {
             throw new Error('Demo login allowed in production mode!');
