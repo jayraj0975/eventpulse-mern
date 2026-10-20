@@ -40,7 +40,6 @@ const EventDetail = () => {
         setSuccessMsg('');
 
         try {
-        try {
             if (!showOTP) {
                 await api.post('/bookings/send-otp');
                 setShowOTP(true);
@@ -154,7 +153,6 @@ const EventDetail = () => {
                                 }`}
                         >
                             {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : 'Confirm Registration')))}
-                        </button>
                         </button>
                         {error && <p className="text-red-500 mt-4 text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
                         {successMsg && <p className="text-green-600 mt-4 text-center font-medium bg-green-50 p-2 rounded">{successMsg}</p>}

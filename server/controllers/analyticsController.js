@@ -42,7 +42,7 @@ exports.getBookingStatusSummary = async (req, res) => {
             data: summary
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Aggregation failed', error: error.message });
+        res.status(500).json({ success: false, message: 'Aggregation failed' });
     }
 };
 
@@ -146,7 +146,7 @@ exports.getEventSummary = async (req, res) => {
             data: summary
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Aggregation failed', error: error.message });
+        res.status(500).json({ success: false, message: 'Aggregation failed' });
     }
 };
 
@@ -204,7 +204,7 @@ exports.getEventPopularity = async (req, res) => {
             data: popularity
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Aggregation failed', error: error.message });
+        res.status(500).json({ success: false, message: 'Aggregation failed' });
     }
 };
 
@@ -273,6 +273,6 @@ exports.getOverviewKPIs = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'KPI calculation failed', error: error.message });
+        res.status(500).json({ success: false, message: 'KPI calculation failed' });
     }
 };
