@@ -20,10 +20,10 @@ MongoDB Atlas provides a fully managed, free cloud database. This is where `mong
    - Choose **Password** authentication.
    - Set a Username (e.g., `eventoradmin`) and a Password (e.g., `eventorapassword`). **Remember these.**
    - Click **Add User**.
-4. **Set Up Network Access (IP Whitelist)**:
+4. **Set Up Network Access (IP Access List)**:
    - On the left sidebar, click **"Network Access"**.
-   - Click **"Add IP Address"**.
-   - Choose **"Allow Access from Anywhere"** (this sets the IP to `0.0.0.0/0`) so that your local machine (and later, Vercel/Render) can connect to it.
+   - Add the narrowest IP access rule that works for your development environment or hosting provider.
+   - Avoid `0.0.0.0/0` for a database with real data; it allows connections from any IP and should not be the default recommendation.
    - Click **Confirm**.
 5. **Get Your Connection String**:
    - On the left sidebar, click **"Database"** (under Deployments).
@@ -56,8 +56,8 @@ Now that you have your credentials, you need to plug them into the backend. Open
 # Paste the MongoDB string you generated (make sure you swapped the password)
 MONGO_URI=mongodb+srv://eventoradmin:your_actual_password@cluster0.xxxxx.mongodb.net/eventora?retryWrites=true&w=majority
 
-# This can be any random string, but keep it secure.
-JWT_SECRET=supersecretjwtkey_eventora
+# Generate a long, random secret for local use. Never commit real secrets or reuse a sample value in production.
+JWT_SECRET=replace_with_a_long_random_secret_not_committed
 
 # Email Setup Configured using Step 2
 EMAIL_USER=yourgmail@gmail.com
@@ -108,3 +108,10 @@ An export file named `Eventora_Postman_Collection.json` is included in the root 
    - Or test **Cancel/Reject Booking (Admin/User)**.
 
 You're done! The full user to admin pipeline is ready to be tested both on the frontend React App and in Postman.
+
+
+## Safety reminders
+- Keep real credentials only in ignored local `.env` files or the hosting provider's secret/environment-variable settings. Never commit database URIs, email app passwords, or production JWT secrets.
+- Use a disposable database for seeding and integration tests. Never seed or run destructive tests against production data.
+- For MongoDB network access, prefer a narrow IP allowlist rather than opening access to every IP.
+- Before a college demonstration, verify the current live frontend and backend health endpoint and test the user/admin flows. Do not infer end-to-end health from a successful build alone.
