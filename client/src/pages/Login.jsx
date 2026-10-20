@@ -100,7 +100,7 @@ const Login = () => {
                 <p>Email: <code>user@eventpulse.com</code></p>
                 <p>Password: <code>password123</code></p>
                 <button type="button" onClick={() => { setEmail('user@eventpulse.com'); setPassword('password123'); setShowOTP(false); setOtp(''); setError(''); }} className="mt-3 rounded-lg bg-blue-900 px-3 py-2 font-semibold text-white hover:bg-blue-800">Use demo credentials</button>
-                <p className="mt-2 text-xs">Demo checkout requires the server's DEMO_MODE=true setting in a non-production environment.</p>
+                <p className="mt-2 text-xs">These seeded demo credentials are for local/demo databases only. The public deployment uses normal booking OTP verification.</p>
             </div>
 
             <p className="text-center mt-8 text-gray-600">

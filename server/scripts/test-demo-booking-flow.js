@@ -8,7 +8,7 @@ const Event = require('../models/Event');
 const Booking = require('../models/Booking');
 const OTP = require('../models/OTP');
 const { login } = require('../controllers/authController');
-const { bookEvent, simulateDemoPayment, cancelBooking } = require('../controllers/bookingController');
+const { bookEvent, sendBookingOTP, simulateDemoPayment, cancelBooking } = require('../controllers/bookingController');
 const { getOverviewKPIs } = require('../controllers/analyticsController');
 
 function createMockRes() {
@@ -295,6 +295,78 @@ async function runDemoTestSuite() {
         } else {
             throw new Error('Double cancellation inflated seat count!');
         }
+
+        console.log('\n====================================================');
+        console.log('TEST 6: Production OTP Verification and Error Actionability');
+        console.log('====================================================');
+
+        // 6.1 sendBookingOTP in production when EMAIL_USER is missing returns 503
+        const originalEmailUser = process.env.EMAIL_USER;
+        const originalEmailPass = process.env.EMAIL_PASS;
+        delete process.env.EMAIL_USER;
+        delete process.env.EMAIL_PASS;
+        process.env.NODE_ENV = 'production';
+
+        const otpReqProd = {
+            user: { id: normalUser._id.toString(), email: normalUser.email, role: normalUser.role }
+        };
+        const otpResProd = createMockRes();
+        await sendBookingOTP(otpReqProd, otpResProd);
+
+        if (otpResProd.statusCode === 503 && otpResProd.data?.message?.includes('not configured')) {
+            console.log('✅ PASS: 6.1 Production booking OTP returns 503 when email delivery is not configured');
+        } else {
+            throw new Error(`Expected 503, got status ${otpResProd.statusCode}: ${JSON.stringify(otpResProd.data)}`);
+        }
+
+        // Restore dev environment for OTP generation
+        process.env.NODE_ENV = 'development';
+        if (originalEmailUser) process.env.EMAIL_USER = originalEmailUser;
+        if (originalEmailPass) process.env.EMAIL_PASS = originalEmailPass;
+
+        // 6.2 sendBookingOTP in dev creates OTP in database
+        const otpResDev = createMockRes();
+        await sendBookingOTP(otpReqProd, otpResDev);
+
+        const createdOtpDoc = await OTP.findOne({ email: normalUser.email, action: 'event_booking' });
+        if (otpResDev.statusCode === 200 && createdOtpDoc && createdOtpDoc.otp) {
+            console.log('✅ PASS: 6.2 Booking OTP created in database and sent successfully in development');
+        } else {
+            throw new Error('Failed to create booking OTP record in database');
+        }
+
+        // 6.3 bookEvent with invalid OTP fails with 400
+        await Booking.deleteMany({ userId: normalUser._id, eventId: paidEvent._id });
+        const invalidOtpReq = {
+            user: { id: normalUser._id.toString(), email: normalUser.email, role: normalUser.role },
+            body: { eventId: paidEvent._id.toString(), otp: '000000' }
+        };
+        const invalidOtpRes = createMockRes();
+        await bookEvent(invalidOtpReq, invalidOtpRes);
+
+        if (invalidOtpRes.statusCode === 400 && invalidOtpRes.data.message.includes('Invalid or expired OTP')) {
+            console.log('✅ PASS: 6.3 Booking with incorrect OTP rejected with 400');
+        } else {
+            throw new Error(`Expected 400, got ${invalidOtpRes.statusCode}`);
+        }
+
+        // 6.4 bookEvent with valid OTP succeeds and deletes OTP
+        const validOtpReq = {
+            user: { id: normalUser._id.toString(), email: normalUser.email, role: normalUser.role },
+            body: { eventId: paidEvent._id.toString(), otp: createdOtpDoc.otp }
+        };
+        const validOtpRes = createMockRes();
+        await bookEvent(validOtpReq, validOtpRes);
+
+        const otpAfterBooking = await OTP.findOne({ email: normalUser.email, action: 'event_booking' });
+        if (validOtpRes.statusCode === 201 && validOtpRes.data.booking?.status === 'pending' && !otpAfterBooking) {
+            console.log('✅ PASS: 6.4 Booking with valid OTP succeeds and consumes OTP');
+        } else {
+            throw new Error(`Expected 201 with OTP consumed, got status ${validOtpRes.statusCode}`);
+        }
+
+        // Clean up test booking
+        await Booking.deleteMany({ userId: normalUser._id, eventId: paidEvent._id });
 
         console.log('\n====================================================');
         console.log('ALL DEMO FLOW & SECURITY TESTS PASSED (100%)');

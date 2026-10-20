@@ -9,7 +9,7 @@ exports.getEvents = async (req, res) => {
         const events = await Event.find(filters).populate('createdBy', 'name email');
         res.json(events);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -19,7 +19,7 @@ exports.getEventById = async (req, res) => {
         if (!event) return res.status(404).json({ message: 'Event not found' });
         res.json(event);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -40,7 +40,7 @@ exports.createEvent = async (req, res) => {
         });
         res.status(201).json(event);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -62,7 +62,7 @@ exports.updateEvent = async (req, res) => {
         if (!event) return res.status(404).json({ message: 'Event not found' });
         res.json(event);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -72,6 +72,6 @@ exports.deleteEvent = async (req, res) => {
         if (!event) return res.status(404).json({ message: 'Event not found' });
         res.json({ message: 'Event deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };

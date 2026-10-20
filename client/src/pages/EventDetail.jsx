@@ -40,18 +40,6 @@ const EventDetail = () => {
         setSuccessMsg('');
 
         try {
-            // The simulated checkout is strictly local-development only. Production must use OTP.
-            const isDemoUser = import.meta.env.DEV && user.email?.toLowerCase() === 'user@eventpulse.com';
-
-            if (isDemoUser) {
-                // The backend only permits this shortcut when DEMO_MODE=true.
-                const bookingResponse = await api.post('/bookings', { eventId: event._id });
-                const bookingId = bookingResponse.data.booking._id;
-                const paymentResponse = await api.post('/bookings/' + bookingId + '/demo-pay');
-                navigate('/payment-success', { state: { demoFlow: true, demoPayment: Boolean(paymentResponse.data.demoPayment), message: paymentResponse.data.message } });
-                return;
-            }
-
             if (!showOTP) {
                 await api.post('/bookings/send-otp');
                 setShowOTP(true);
@@ -141,10 +129,6 @@ const EventDetail = () => {
                             </div>
                         </div>
 
-                        {import.meta.env.DEV && import.meta.env.DEV && user?.email?.toLowerCase() === 'user@eventpulse.com' && (
-                            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Demo account: checkout is simulated for this college demonstration. No real money will be charged.</p>
-                        )}
-
                         {showOTP && (
                             <div className="mb-4">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Enter OTP to Confirm</label>
@@ -168,7 +152,7 @@ const EventDetail = () => {
                                 : 'bg-gray-900 hover:bg-black text-white hover:shadow-xl hover:-translate-y-1'
                                 }`}
                         >
-                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : (import.meta.env.DEV && user?.email?.toLowerCase() === 'user@eventpulse.com' ? 'Demo Checkout' : 'Confirm Registration'))))}
+                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : 'Confirm Registration')))}
                         </button>
                         {error && <p className="text-red-500 mt-4 text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
                         {successMsg && <p className="text-green-600 mt-4 text-center font-medium bg-green-50 p-2 rounded">{successMsg}</p>}
