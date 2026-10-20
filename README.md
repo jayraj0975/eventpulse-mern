@@ -11,6 +11,7 @@ An event-management and ticket-booking web platform enhanced with real database 
 * **Backend Health Check:** [https://api-production-ba9f.up.railway.app/api/health](https://api-production-ba9f.up.railway.app/api/health)
 * **Viva Demonstration Guide:** [VIVA_GUIDE.md](./VIVA_GUIDE.md)
 * **Comprehensive Project Handbook (PDF):** [Eventora_AD_Handbook.pdf](./Eventora_AD_Handbook.pdf)
+* **Current Deployment & Viva Safety Addendum:** [Eventora_AD_Handbook_Addendum.md](./Eventora_AD_Handbook_Addendum.md)
 * **Postman API Collection:** [Eventora_Postman_Collection.json](./Eventora_Postman_Collection.json)
 * **System Architecture Flowchart:** [fc.png](./fc.png)
 * **Data Flow Diagram (DFD):** [dfd.png](./dfd.png)
