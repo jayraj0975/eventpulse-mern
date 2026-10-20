@@ -316,7 +316,7 @@ All verifications can be executed via standard npm scripts:
 These are the configured public URLs; check them immediately before a presentation. A successful deployment status alone does not prove that login, booking, analytics, or email flows work end to end.
 
 ### Safe test workflow
-- Use a disposable local/test MongoDB database whose database name contains `test` for integration tests. The test scripts require `TEST_MONGO_URI`; never point it at a production database.
+- Use a disposable local/test MongoDB database whose database name contains `test` for integration tests. Set `TEST_MONGO_URI` explicitly for reproducibility; outside production, the scripts default to a local `eventpulse_test` database. Never point either setting at a production database.
 - Example (local MongoDB):
   ```bash
   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test
