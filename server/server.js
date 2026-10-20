@@ -103,9 +103,9 @@ mongoose.connect(mongoUri)
         console.log('MongoDB Connected');
         try {
             await Promise.all([
-                User.syncIndexes(),
-                Event.syncIndexes(),
-                Booking.syncIndexes()
+                User.createIndexes(),
+                Event.createIndexes(),
+                Booking.createIndexes()
             ]);
             console.log('Database indexes synchronized');
         } catch (idxErr) {
