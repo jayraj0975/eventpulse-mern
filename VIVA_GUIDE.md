@@ -12,7 +12,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
 1. Open the project in a terminal and confirm the backend is connected to a **disposable local/demo database**.
 2. If you need to seed fresh sample data, first confirm `MONGO_URI` points only to that disposable database, then run:
    ```bash
-   npm run seed --prefix server
+   ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm run seed --prefix server
    ```
    **Never run the seed command against production or a database containing real data.** It is for local/demo setup only.
 3. Point out to the examiner:
@@ -22,7 +22,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
 ### Step 2: Show the Query Plan Optimization (`explain()`) (45 seconds)
 1. In the terminal, run against a disposable test database (the database name must contain `test`):
    ```bash
-   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test node server/scripts/verify-indexes-and-queries.js
+   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test node server/scripts/verify-indexes-and-queries.js
    ```
    For the complete suite, use `TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test`. Never run integration tests against production.
 2. Point to the terminal output:
