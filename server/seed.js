@@ -91,8 +91,7 @@ const seedDatabase = async () => {
         return;
     }
     if (process.env.ALLOW_DEMO_SEED !== 'true') {
-        console.error('Seeding is disabled by default. Set ALLOW_DEMO_SEED=true only for a disposable local/test database.');
-        process.exitCode = 1;
+        console.warn('Demo seeding skipped. Set ALLOW_DEMO_SEED=true only for a disposable local/test database.');
         return;
     }
     try {
