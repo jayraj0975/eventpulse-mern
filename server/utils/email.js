@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const escapeHtml = (value = '') => String(value).replace(/[&<>\"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' })[char]);
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -16,10 +17,10 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: userEmail,
-            subject: `Booking Confirmed: ${eventTitle}`,
+            subject: `Booking Confirmed: ${escapeHtml(eventTitle)}`,
             html: `
-        <h2>Hi ${userName}!</h2>
-        <p>Your booking for the event <strong>${eventTitle}</strong> is successfully confirmed.</p>
+        <h2>Hi ${escapeHtml(userName)}!</h2>
+        <p>Your booking for the event <strong>${escapeHtml(eventTitle)}</strong> is successfully confirmed.</p>
         <p>Thank you for choosing EventPulse.</p>
       `
         };
@@ -27,7 +28,7 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
             await transporter.sendMail(mailOptions);
             console.log('📧 Booking confirmation email sent successfully to', userEmail);
         } else {
-            console.log(`ℹ️ [Email Skipped] Booking confirmation email for ${userEmail} (${eventTitle}) logged in dev mode.`);
+            console.log(`ℹ️ [Email Skipped] Booking confirmation email for ${userEmail} (${escapeHtml(eventTitle)}) logged in dev mode.`);
         }
     } catch (error) {
         console.error('Error sending email:', error.message);
@@ -56,15 +57,20 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-        console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
+        }
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             await transporter.sendMail(mailOptions);
             console.log(`📧 OTP email sent to ${userEmail} for ${type}`);
+        } else if (process.env.NODE_ENV === 'production') {
+            throw new Error('Email delivery is not configured. Set EMAIL_USER and EMAIL_PASS.');
         } else {
             console.log(`ℹ️ [Email Skipped] EMAIL_USER/EMAIL_PASS not configured. Using console OTP above.`);
         }
     } catch (error) {
         console.error('Error sending OTP email:', error.message);
+        if (process.env.NODE_ENV === 'production') throw error;
     }
 };
 
