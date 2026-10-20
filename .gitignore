@@ -3,3 +3,5 @@ node_modules
 dist
 client/dist
 docs_build/
+.vercel
+.env*

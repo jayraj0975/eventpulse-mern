@@ -8,7 +8,7 @@ const User = require('../models/User');
 
 async function runExplainTests() {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/eventora');
+        await mongoose.connect(require('./require-test-mongo-uri')());
         console.log('Connected to MongoDB for Query Plan Verification\n');
 
         const db = mongoose.connection.db;

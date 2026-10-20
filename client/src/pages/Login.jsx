@@ -95,6 +95,14 @@ const Login = () => {
                 </button>
             </form>
 
+            <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+                <p className="font-bold">College demo account</p>
+                <p>Email: <code>user@eventpulse.com</code></p>
+                <p>Password: <code>password123</code></p>
+                <button type="button" onClick={() => { setEmail('user@eventpulse.com'); setPassword('password123'); setShowOTP(false); setOtp(''); setError(''); }} className="mt-3 rounded-lg bg-blue-900 px-3 py-2 font-semibold text-white hover:bg-blue-800">Use demo credentials</button>
+                <p className="mt-2 text-xs">Demo checkout requires the server's DEMO_MODE=true setting in a non-production environment.</p>
+            </div>
+
             <p className="text-center mt-8 text-gray-600">
                 Don't have an account? <Link to="/register" className="text-gray-900 font-bold hover:underline">Sign up</Link>
             </p>

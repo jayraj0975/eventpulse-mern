@@ -30,7 +30,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
 ### Step 3: Demonstrate User Booking & OTP Verification (45 seconds)
 1. Start the app: `npm run dev`.
 2. Open browser at `http://localhost:5173`.
-3. Log in as regular user (`user@eventora.com` / `password123`).
+3. Log in as regular user (`user@eventpulse.com` / `password123`).
 4. Click on an event (e.g. "React & Node.js Developer Retreat") and click **Book Ticket**.
 5. Show the OTP dialog:
    * *"The backend generates a 6-digit cryptographic OTP stored with a 300-second TTL in MongoDB."*
@@ -39,7 +39,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
    * Explain: *"The seat count is NOT decremented yet. It remains pending until admin review."*
 
 ### Step 4: Demonstrate Admin Dashboard & Real Aggregation Reports (60 seconds)
-1. Log out and log in as Admin (`admin@eventora.com` / `password123`).
+1. Log out and log in as Admin (`admin@eventpulse.com` / `password123`).
 2. Navigate to the **Admin Dashboard**.
 3. Point out the top 4 KPI cards:
    * *"These numbers are not hardcoded or calculated in React. They are returned by our `/api/analytics/overview` endpoint using MongoDB's `$facet` operator to compute verified revenue and client counts in a single database pass."*

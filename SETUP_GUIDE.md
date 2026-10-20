@@ -93,7 +93,7 @@ It will provide a local URL (e.g., `http://localhost:5173/`). Open this in your 
 
 ## Step 5: Test the API with Postman
 
-I have included an export file named `Eventora_Postman_Collection.json` in the root of the project. This contains every API route pre-configured.
+An export file named `Eventora_Postman_Collection.json` is included in the root of the project. This contains every API route pre-configured.
 
 1. Open [Postman](https://www.postman.com/downloads/).
 2. Click **Import** (top left).

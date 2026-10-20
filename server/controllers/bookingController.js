@@ -20,15 +20,19 @@ exports.sendBookingOTP = async (req, res) => {
 exports.bookEvent = async (req, res) => {
     try {
         const { eventId, otp } = req.body;
+        const isDemoBooking = process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && req.user.email === 'user@eventpulse.com' && req.user.role === 'user';
 
-        if (!eventId || !otp) {
+        if (!eventId || (!otp && !isDemoBooking)) {
             return res.status(400).json({ message: 'Event ID and OTP are required' });
         }
 
-        // Verify OTP explicitly before proceeding
-        const validOTP = await OTP.findOne({ email: req.user.email, otp, action: 'event_booking' });
-        if (!validOTP) {
-            return res.status(400).json({ message: 'Invalid or expired OTP for booking' });
+        // OTP may only be skipped for the explicitly configured demo account.
+        let validOTP = null;
+        if (!isDemoBooking) {
+            validOTP = await OTP.findOne({ email: req.user.email, otp, action: 'event_booking' });
+            if (!validOTP) {
+                return res.status(400).json({ message: 'Invalid or expired OTP for booking' });
+            }
         }
 
         const event = await Event.findById(eventId);
@@ -53,7 +57,7 @@ exports.bookEvent = async (req, res) => {
             amount: event.ticketPrice
         });
 
-        await OTP.deleteOne({ _id: validOTP._id }); // cleanup OTP
+        if (validOTP) await OTP.deleteOne({ _id: validOTP._id }); // cleanup OTP
 
         res.status(201).json({ message: 'Booking request submitted successfully', booking });
     } catch (error) {
@@ -113,6 +117,65 @@ exports.confirmBooking = async (req, res) => {
         res.json({ message: 'Booking confirmed successfully', booking: updatedBooking });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+exports.simulateDemoPayment = async (req, res) => {
+    try {
+        if (process.env.DEMO_MODE !== 'true' || process.env.NODE_ENV === 'production') {
+            return res.status(403).json({ message: 'Demo payments are disabled' });
+        }
+        if (req.user.role !== 'user' || req.user.email !== 'user@eventpulse.com') {
+            return res.status(403).json({ message: 'Demo payment is only available to the configured demo user' });
+        }
+
+        const booking = await Booking.findOne({ _id: req.params.id, userId: req.user.id }).populate('eventId');
+        if (!booking) return res.status(404).json({ message: 'Booking not found' });
+        if (!booking.eventId) return res.status(404).json({ message: 'The event for this booking no longer exists' });
+        if (booking.status === 'confirmed') {
+            return res.json({ message: 'Demo booking is already confirmed', booking, demoPayment: Number(booking.amount) > 0, demoFlow: true });
+        }
+        if (booking.status !== 'pending') {
+            return res.status(400).json({ message: 'Only pending bookings can be confirmed' });
+        }
+
+        // Demo-only simulation. No payment provider is called and no money is charged.
+        const updatedEvent = await Event.findOneAndUpdate(
+            { _id: booking.eventId._id, availableSeats: { $gt: 0 } },
+            { $inc: { availableSeats: -1 } },
+            { new: true }
+        );
+        if (!updatedEvent) return res.status(400).json({ message: 'No seats available for this event' });
+
+        const updatedBooking = await Booking.findOneAndUpdate(
+            { _id: booking._id, status: 'pending' },
+            {
+                status: 'confirmed',
+                // A simulated checkout is not a real payment; never count it as revenue.
+                paymentStatus: 'not_paid'
+            },
+            { new: true }
+        );
+        if (!updatedBooking) {
+            await Event.findByIdAndUpdate(booking.eventId._id, { $inc: { availableSeats: 1 } });
+            const latest = await Booking.findById(booking._id);
+            if (latest && latest.status === 'confirmed') {
+                return res.json({ message: 'Demo booking is already confirmed', booking: latest, demoPayment: Number(latest.amount) > 0, demoFlow: true });
+            }
+            return res.status(409).json({ message: 'Booking changed during confirmation. Please refresh and check your dashboard.' });
+        }
+
+        res.json({
+            message: booking.amount > 0
+                ? 'Demo checkout completed; no real money was charged. Ticket confirmed for demonstration only.'
+                : 'Free registration confirmed for demonstration.',
+            booking: updatedBooking,
+            demoPayment: Number(booking.amount) > 0,
+            demoFlow: true
+        });
+    } catch (error) {
+        if (error.name === 'CastError') return res.status(400).json({ message: 'Invalid booking ID' });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 

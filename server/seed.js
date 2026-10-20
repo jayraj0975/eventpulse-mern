@@ -85,6 +85,11 @@ const events = [
 
 const seedDatabase = async () => {
     try {
+        if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_PRODUCTION_SEED) {
+            console.error('❌ Refusing to run destructive seed script in production environment.');
+            process.exit(1);
+        }
+
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora');
         console.log('\n✅ MongoDB connection open...');
 

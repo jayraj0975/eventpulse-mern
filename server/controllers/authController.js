@@ -31,14 +31,15 @@ exports.register = async (req, res) => {
         await OTP.create({ email, otp, action: 'account_verification' });
         await sendOTPEmail(email, otp, 'account_verification');
 
-        const message = !process.env.EMAIL_USER
+        const isDevNoEmail = process.env.NODE_ENV !== 'production' && !process.env.EMAIL_USER;
+        const message = isDevNoEmail
             ? 'Account created! (Demo mode: Use OTP 123456 or the code shown in server logs)'
             : 'OTP sent to email. Please verify.';
 
         res.status(201).json({
             message,
             email: user.email,
-            demoOtp: !process.env.EMAIL_USER ? otp : undefined
+            demoOtp: isDevNoEmail ? otp : undefined
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
@@ -53,6 +54,12 @@ exports.login = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+        const isConfiguredDemoUser = process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && user.email === 'user@eventpulse.com' && user.role === 'user';
+        if (isConfiguredDemoUser && !user.isVerified) {
+            user.isVerified = true;
+            await user.save();
+        }
 
         if (!user.isVerified && user.role !== 'admin') {
             const otp = generateOTP();
@@ -83,7 +90,7 @@ exports.login = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
-        const isDemoBypass = !process.env.EMAIL_USER && (otp === '123456' || otp === '000000');
+        const isDemoBypass = process.env.NODE_ENV !== 'production' && !process.env.EMAIL_USER && (otp === '123456' || otp === '000000');
         const validOTP = await OTP.findOne({ email, otp, action: 'account_verification' });
 
         if (!validOTP && !isDemoBypass) {
