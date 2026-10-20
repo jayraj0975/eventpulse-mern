@@ -4,13 +4,23 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const transporter = process.env.SMTP_HOST
+    ? nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 465,
+        secure: Number(process.env.SMTP_PORT) === 465,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    })
+    : nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
 
 const sendBookingEmail = async (userEmail, userName, eventTitle) => {
     try {
@@ -57,20 +67,24 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
-        }
+        console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
+
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            await transporter.sendMail(mailOptions);
-            console.log(`📧 OTP email sent to ${userEmail} for ${type}`);
-        } else if (process.env.NODE_ENV === 'production') {
-            throw new Error('Email delivery is not configured. Set EMAIL_USER and EMAIL_PASS.');
+            try {
+                await transporter.sendMail(mailOptions);
+                console.log(`📧 OTP email sent to ${userEmail} for ${type}`);
+                return { delivered: true };
+            } catch (err) {
+                console.error(`Error delivering OTP email to ${userEmail}:`, err.message);
+                return { delivered: false, demoOtp: otp, error: err.message };
+            }
         } else {
-            console.log(`ℹ️ [Email Skipped] EMAIL_USER/EMAIL_PASS not configured. Using console OTP above.`);
+            console.log(`ℹ️ [Email Skipped] EMAIL_USER/EMAIL_PASS not configured. Demo code: ${otp}`);
+            return { delivered: false, demoOtp: otp };
         }
     } catch (error) {
-        console.error('Error sending OTP email:', error.message);
-        if (process.env.NODE_ENV === 'production') throw error;
+        console.error('Error in sendOTPEmail:', error.message);
+        return { delivered: false, demoOtp: otp, error: error.message };
     }
 };
 

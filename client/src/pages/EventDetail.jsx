@@ -41,9 +41,12 @@ const EventDetail = () => {
 
         try {
             if (!showOTP) {
-                await api.post('/bookings/send-otp');
+                const res = await api.post('/bookings/send-otp');
                 setShowOTP(true);
-                setSuccessMsg('OTP sent to your email. Please verify to continue.');
+                setSuccessMsg(res.data?.message || 'OTP sent to your email. Please verify to continue.');
+                if (res.data?.demoOtp) {
+                    setOtp(res.data.demoOtp);
+                }
             } else {
                 await api.post('/bookings', { eventId: event._id, otp });
                 setSuccessMsg('Booking request submitted! It is awaiting admin confirmation. Check your Dashboard.');
