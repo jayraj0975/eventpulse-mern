@@ -26,6 +26,21 @@ const bookingRoutes = require('./routes/bookings');
 const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
+const corsOptions = {
+    origin(origin, callback) {
+        if (!origin) return callback(null, true);
+        const stableOrigin = origin === 'https://eventpulse-mern.vercel.app';
+        let previewOrigin = false;
+        try {
+            const host = new URL(origin).hostname;
+            previewOrigin = host.endsWith('.vercel.app') && /^eventpulse-mern-[a-z0-9-]+$/.test(host.slice(0, -'.vercel.app'.length));
+        } catch {}
+        const localOrigin = process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+        callback(null, stableOrigin || previewOrigin || localOrigin);
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
 
 // Disable x-powered-by to prevent fingerprinting
 app.disable('x-powered-by');
@@ -39,7 +54,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Dedicated Health endpoints
