@@ -1,7 +1,8 @@
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
-const { setupTestDatabase, teardownTestDatabase } = require('./test-db-helper');
+const mongoose = require('mongoose');
+const requireTestMongoUri = require('./require-test-mongo-uri');
 
 const authRoutes = require('../routes/auth');
 const eventRoutes = require('../routes/events');
@@ -13,7 +14,7 @@ async function runApiSmokeTest() {
     console.log('TEST SUITE: API Route & Health Smoke Verification');
     console.log('====================================================\n');
 
-    await setupTestDatabase();
+    await mongoose.connect(requireTestMongoUri());
 
     const app = express();
     app.disable('x-powered-by');
@@ -98,7 +99,7 @@ async function runApiSmokeTest() {
         console.log('====================================================\n');
     } finally {
         await new Promise((resolve) => server.close(resolve));
-        await teardownTestDatabase();
+        await mongoose.disconnect();
     }
 }
 

@@ -1,5 +1,5 @@
 function requireTestMongoUri() {
-    const uri = process.env.TEST_MONGO_URI;
+    const uri = process.env.TEST_MONGO_URI || (process.env.NODE_ENV !== 'production' ? 'mongodb://127.0.0.1:27017/eventpulse_test' : null);
 
     if (!uri) {
         throw new Error(
