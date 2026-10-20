@@ -18,8 +18,8 @@ An event-management and ticket-booking web platform enhanced with real database 
 #### Demo Credentials (Seeded)
 | Role | Email | Password | Privileges |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@eventpulse.com` | `password123` | Full organizer access, approval queue, analytics & aggregation reports |
-| **Demo User** | `user@eventpulse.com` | `password123` | Event browsing, 1-click demo login, simulated ticket booking |
+| **Local demo admin** | `admin@eventpulse.com` | `password123` | Local/demo database only; never assume this account exists in production |
+| **Local demo user** | `user@eventpulse.com` | `password123` | Local/demo database only; demo shortcut and simulated checkout are disabled in production |
 
 ---
 
