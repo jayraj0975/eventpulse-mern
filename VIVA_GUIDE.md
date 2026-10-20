@@ -8,12 +8,13 @@ This guide is designed for the **Advanced Databases (AD)** viva examination. It 
 
 Follow this exact sequence to demonstrate the project to the examiner:
 
-### Step 1: Show Safe Seeding & Index Synchronization (30 seconds)
-1. Open a terminal in the project directory.
-2. Run:
+### Step 1: Show the Demo Environment & Index Synchronization (30 seconds)
+1. Open the project in a terminal and confirm the backend is connected to a **disposable local/demo database**.
+2. If you need to seed fresh sample data, first confirm `MONGO_URI` points only to that disposable database, then run:
    ```bash
    npm run seed --prefix server
    ```
+   **Never run the seed command against production or a database containing real data.** It is for local/demo setup only.
 3. Point out to the examiner:
    * *"We seed 10 users, 6 events across different categories, and randomized bookings."*
    * *"Notice that `syncIndexes()` runs automatically, ensuring compound indexes and partial unique indexes are created in MongoDB before any operations begin."*
