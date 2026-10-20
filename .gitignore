@@ -4,3 +4,4 @@ dist
 client/dist
 docs_build/
 .vercel
+.env*
