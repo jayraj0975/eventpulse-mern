@@ -54,7 +54,7 @@ Now that you have your credentials, you need to plug them into the backend. Open
 
 ```env
 # Paste the MongoDB string you generated (make sure you swapped the password)
-MONGO_URI=mongodb+srv://eventoradmin:your_actual_password@cluster0.xxxxx.mongodb.net/eventora?retryWrites=true&w=majority
+MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test
 
 # Generate a long, random secret for local use. Never commit real secrets or reuse a sample value in production.
 JWT_SECRET=replace_with_a_long_random_secret_not_committed
@@ -64,6 +64,8 @@ EMAIL_USER=yourgmail@gmail.com
 EMAIL_PASS=the_16_character_app_password
 
 PORT=5000
+NODE_ENV=development
+DEMO_MODE=true
 ```
 
 ---
