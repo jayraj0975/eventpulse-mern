@@ -3,7 +3,25 @@
 An event-management and ticket-booking web platform enhanced with real database engineering, designed for the **Advanced Databases (AD)** curriculum. Built on the MERN stack (MongoDB, Express, React, Node.js), this project demonstrates practical database concepts including **aggregation pipelines**, **compound & partial unique indexes**, **atomic concurrency controls**, **query plan optimization with `explain()`**, and **schema-level integrity constraints**.
 
 ---
-LINK- https://eventpulse-mern.vercel.app/login
+
+### Quick Links & Live Deployments
+
+* **Live Web Application:** [https://eventpulse-mern.vercel.app](https://eventpulse-mern.vercel.app)
+* **Live Backend API (Railway):** [https://api-production-ba9f.up.railway.app/api](https://api-production-ba9f.up.railway.app/api)
+* **Backend Health Check:** [https://api-production-ba9f.up.railway.app/api/health](https://api-production-ba9f.up.railway.app/api/health)
+* **Viva Demonstration Guide:** [VIVA_GUIDE.md](./VIVA_GUIDE.md)
+* **Comprehensive Project Handbook (PDF):** [Eventora_AD_Handbook.pdf](./Eventora_AD_Handbook.pdf)
+* **Postman API Collection:** [Eventora_Postman_Collection.json](./Eventora_Postman_Collection.json)
+* **System Architecture Flowchart:** [fc.png](./fc.png)
+* **Data Flow Diagram (DFD):** [dfd.png](./dfd.png)
+
+#### Demo Credentials (Seeded)
+| Role | Email | Password | Privileges |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@eventpulse.com` | `password123` | Full organizer access, approval queue, analytics & aggregation reports |
+| **Demo User** | `user@eventpulse.com` | `password123` | Event browsing, 1-click demo login, simulated ticket booking |
+
+---
 
 ## 1. Project Overview & Objective
 
@@ -24,10 +42,16 @@ EventPulse resolves these issues using database-native features in MongoDB 7.0 /
 
 ## 2. Technology Stack & Architecture
 
-* **Database:** MongoDB 7.0 (Docker / Atlas) via Mongoose 8.2 ODM
+* **Database:** MongoDB 7.0 (Docker / Atlas / Railway) via Mongoose 8.2 ODM
 * **Backend:** Node.js (v24), Express.js 4.18 REST API, JWT Authentication, BCrypt password hashing
 * **Frontend:** React 18, Vite 5, Tailwind CSS v3, React Router v6, Axios with Bearer Interceptor
 * **Verification & Testing:** Native explain query tests, automated concurrency & aggregation test suite
+
+### System Architecture Flowchart
+![System Architecture Flowchart](./fc.png)
+
+### Data Flow Diagram (DFD)
+![Data Flow Diagram](./dfd.png)
 
 ### Request & Data Architecture Flow
 ```
@@ -45,7 +69,7 @@ EventPulse resolves these issues using database-native features in MongoDB 7.0 /
                      │                                                 │
                      └────────────────────────┬────────────────────────┘
                                               ▼
-                                   [MongoDB Database: eventora]
+                                   [MongoDB Database: eventpulse]
 ```
 
 ---
