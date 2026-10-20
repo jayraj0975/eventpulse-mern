@@ -5,6 +5,21 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Ensure required environment variables exist
+if (!process.env.JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+        console.error('FATAL: JWT_SECRET environment variable is missing in production!');
+        process.exit(1);
+    } else {
+        process.env.JWT_SECRET = 'dev_jwt_secret_eventora_college_2026';
+        console.warn('⚠️ JWT_SECRET not set; using local development secret.');
+    }
+}
+
+const User = require('./models/User');
+const Event = require('./models/Event');
+const Booking = require('./models/Booking');
+
 const authRoutes = require('./routes/auth');
 const eventRoutes = require('./routes/events');
 const bookingRoutes = require('./routes/bookings');
@@ -12,9 +27,36 @@ const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 
+// Disable x-powered-by to prevent fingerprinting
+app.disable('x-powered-by');
+
+// Security headers middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Dedicated Health endpoints
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+});
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -22,10 +64,34 @@ app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// Database Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/eventora')
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+// Catch-all 404 for unknown API routes
+app.all('/api/*', (req, res) => {
+    res.status(404).json({ message: 'API route not found' });
+});
+
+// Central error handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled server error:', err.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+});
+
+// Database Connection & Safe Index Sync
+const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/eventora';
+mongoose.connect(mongoUri)
+    .then(async () => {
+        console.log('MongoDB Connected');
+        try {
+            await Promise.all([
+                User.syncIndexes(),
+                Event.syncIndexes(),
+                Booking.syncIndexes()
+            ]);
+            console.log('Database indexes synchronized');
+        } catch (idxErr) {
+            console.warn('Index sync warning:', idxErr.message);
+        }
+    })
+    .catch(err => console.error('MongoDB Connection Error:', err));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
