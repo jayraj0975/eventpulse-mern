@@ -54,7 +54,7 @@ Now that you have your credentials, you need to plug them into the backend. Open
 
 ```env
 # Paste the MongoDB string you generated (make sure you swapped the password)
-MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test
+MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev
 
 # Generate a long, random secret for local use. Never commit real secrets or reuse a sample value in production.
 JWT_SECRET=replace_with_a_long_random_secret_not_committed
@@ -69,6 +69,14 @@ DEMO_MODE=true
 ```
 
 ---
+
+### Seed a disposable local demo database (optional)
+
+Run only after confirming MongoDB is local and the database contains no real data:
+```bash
+ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev npm run seed --prefix server
+```
+Never seed production. Automated integration tests must use the separate `eventpulse_test` database through `TEST_MONGO_URI`.
 
 ## Step 4: Run the Application!
 
