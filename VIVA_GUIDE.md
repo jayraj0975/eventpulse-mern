@@ -12,7 +12,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
 1. Open the project in a terminal and confirm the backend is connected to a **disposable local/demo database**.
 2. If you need to seed fresh sample data, first confirm `MONGO_URI` points only to that disposable database, then run:
    ```bash
-   ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm run seed --prefix server
+   ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev npm run seed --prefix server
    ```
    **Never run the seed command against production or a database containing real data.** It is for local/demo setup only.
 3. Point out to the examiner:
