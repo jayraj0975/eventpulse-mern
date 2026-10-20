@@ -5,15 +5,14 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Ensure required environment variables exist
+// Required secrets/configuration: never fall back to a known JWT secret or localhost DB.
 if (!process.env.JWT_SECRET) {
-    if (process.env.NODE_ENV === 'production') {
-        console.error('FATAL: JWT_SECRET environment variable is missing in production!');
-        process.exit(1);
-    } else {
-        process.env.JWT_SECRET = 'dev_jwt_secret_eventora_college_2026';
-        console.warn('⚠️ JWT_SECRET not set; using local development secret.');
-    }
+    console.error('FATAL: JWT_SECRET environment variable is required.');
+    process.exit(1);
+}
+if (!process.env.MONGO_URI) {
+    console.error('FATAL: MONGO_URI environment variable is required.');
+    process.exit(1);
 }
 
 const User = require('./models/User');
@@ -93,12 +92,7 @@ app.use((err, req, res, next) => {
 });
 
 // Database Connection & Safe Index Sync
-const mongoUri = process.env.MONGO_URI || (process.env.NODE_ENV === 'production' ? null : 'mongodb://localhost:27017/eventora');
-if (!mongoUri) {
-    console.error('FATAL: MONGO_URI is required in production.');
-    process.exit(1);
-}
-mongoose.connect(mongoUri)
+mongoose.connect(process.env.MONGO_URI)
     .then(async () => {
         console.log('MongoDB Connected');
         try {
