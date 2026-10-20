@@ -271,7 +271,7 @@ npm run install:all
 ### 3. Seed Sample Database
 Populate safe, realistic sample data (10 users, 6 categorized events, 20+ bookings, and synchronized indexes):
 ```bash
-npm run seed --prefix server
+ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm run seed --prefix server
 ```
 Default accounts created:
 * **Admin Account:** `admin@eventpulse.com` / `password123`
@@ -322,8 +322,8 @@ These are the configured public URLs; check them immediately before a presentati
   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test
   ```
 - Run `npm run lint` and `npm run build` separately. Report only the checks that actually completed successfully in your environment or in a recorded CI run.
-- **Do not run `npm run seed --prefix server` against production.** Seeding is intended for a disposable development/demo database and may replace existing sample data.
-- The documented demo credentials are seeded sample credentials, not private production credentials. Keep demo mode disabled in production and do not use these accounts for real customer data.
+- **Do not run `ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm run seed --prefix server` against production.** Seeding is intended for a disposable development/demo database and may replace existing sample data.
+- The documented demo credentials are seeded sample credentials for a disposable local/demo database. Demo checkout is disabled in production; production bookings must use normal OTP verification. Do not assume seeded accounts exist on the public deployment.
 
 ### Presentation assets
 - [Viva demonstration guide](./VIVA_GUIDE.md)
