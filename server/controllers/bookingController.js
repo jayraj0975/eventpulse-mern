@@ -14,7 +14,13 @@ exports.sendBookingOTP = async (req, res) => {
         await sendOTPEmail(req.user.email, otp, 'event_booking');
         res.json({ message: 'OTP sent successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Error sending OTP', error: error.message });
+        const emailConfigured = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+        const status = process.env.NODE_ENV === 'production' && !emailConfigured ? 503 : 502;
+        res.status(status).json({
+            message: status === 503
+                ? 'Booking verification email is not configured on the server. Please contact the project administrator.'
+                : 'Could not send the booking OTP. Please try again later.'
+        });
     }
 };
 
