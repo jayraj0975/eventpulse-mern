@@ -1,10 +1,11 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendOTPEmail } = require('../utils/email');
 
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -90,7 +91,7 @@ exports.login = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
-        const isDemoBypass = process.env.NODE_ENV !== 'production' && !process.env.EMAIL_USER && (otp === '123456' || otp === '000000');
+        const isDemoBypass = process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && !process.env.EMAIL_USER && otp === '123456';
         const validOTP = await OTP.findOne({ email, otp, action: 'account_verification' });
 
         if (!validOTP && !isDemoBypass) {
