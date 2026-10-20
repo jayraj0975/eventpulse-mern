@@ -84,6 +84,17 @@ const events = [
 ];
 
 const seedDatabase = async () => {
+    // Some hosting configurations invoke seed.js before starting the server.
+    // In production this is a safe no-op: never create demo accounts or clear data.
+    if (process.env.NODE_ENV === 'production') {
+        console.warn('Production detected; demo seeding is disabled. No database data was modified.');
+        return;
+    }
+    if (process.env.ALLOW_DEMO_SEED !== 'true') {
+        console.error('Seeding is disabled by default. Set ALLOW_DEMO_SEED=true only for a disposable local/test database.');
+        process.exitCode = 1;
+        return;
+    }
     try {
         if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_PRODUCTION_SEED) {
             console.error('❌ Refusing to run destructive seed script in production environment.');
