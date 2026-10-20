@@ -22,10 +22,28 @@ const transporter = process.env.SMTP_HOST
         }
     });
 
+const isDemoOrInternalEmail = (email = '') => {
+    const clean = String(email || '').trim().toLowerCase();
+    const domain = clean.split('@')[1];
+    return !domain || domain === 'eventpulse.com' || domain === 'example.com' || domain === 'test.com' || domain === 'localhost';
+};
+
+const deliverMailWithTimeout = (mailOptions, timeoutMs = 2500) => {
+    return Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Email delivery timed out')), timeoutMs))
+    ]);
+};
+
 const sendBookingEmail = async (userEmail, userName, eventTitle) => {
     try {
+        if (isDemoOrInternalEmail(userEmail)) {
+            console.log(`ℹ️ [Demo Account] Booking confirmation for ${userEmail} (${escapeHtml(eventTitle)}) logged in console.`);
+            return;
+        }
+
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: process.env.EMAIL_USER || 'noreply@eventpulse.com',
             to: userEmail,
             subject: `Booking Confirmed: ${escapeHtml(eventTitle)}`,
             html: `
@@ -34,26 +52,34 @@ const sendBookingEmail = async (userEmail, userName, eventTitle) => {
         <p>Thank you for choosing EventPulse.</p>
       `
         };
+
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            await transporter.sendMail(mailOptions);
+            await deliverMailWithTimeout(mailOptions, 2500);
             console.log('📧 Booking confirmation email sent successfully to', userEmail);
         } else {
             console.log(`ℹ️ [Email Skipped] Booking confirmation email for ${userEmail} (${escapeHtml(eventTitle)}) logged in dev mode.`);
         }
     } catch (error) {
-        console.error('Error sending email:', error.message);
+        console.warn('Outbound booking confirmation email skipped:', error.message);
     }
 };
 
 const sendOTPEmail = async (userEmail, otp, type) => {
     try {
+        console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
+
+        if (isDemoOrInternalEmail(userEmail)) {
+            console.log(`ℹ️ [Demo Account] Skipping SMTP network delivery for ${userEmail}. Using code: ${otp}`);
+            return { delivered: false, demoOtp: otp, isDemo: true };
+        }
+
         const title = type === 'account_verification' ? 'Verify your EventPulse Account' : 'EventPulse Booking Verification';
         const msg = type === 'account_verification'
             ? 'Please use the following OTP to verify your new EventPulse account.'
             : 'Please use the following OTP to verify and confirm your event booking.';
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: process.env.EMAIL_USER || 'noreply@eventpulse.com',
             to: userEmail,
             subject: title,
             html: `
@@ -67,15 +93,14 @@ const sendOTPEmail = async (userEmail, otp, type) => {
                 </div>
             `
         };
-        console.log(`\n========================================\n🔑 [EVENTPULSE OTP] To: ${userEmail}\n   Action: ${type}\n   Code:   ${otp}\n========================================\n`);
 
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             try {
-                await transporter.sendMail(mailOptions);
+                await deliverMailWithTimeout(mailOptions, 2500);
                 console.log(`📧 OTP email sent to ${userEmail} for ${type}`);
                 return { delivered: true };
             } catch (err) {
-                console.error(`Error delivering OTP email to ${userEmail}:`, err.message);
+                console.warn(`⚠️ Outbound email skipped for ${userEmail} (${err.message}). Using code: ${otp}`);
                 return { delivered: false, demoOtp: otp, error: err.message };
             }
         } else {

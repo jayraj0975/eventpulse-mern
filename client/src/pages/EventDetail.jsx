@@ -15,26 +15,44 @@ const EventDetail = () => {
     const [showOTP, setShowOTP] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [existingBooking, setExistingBooking] = useState(null);
 
     useEffect(() => {
-        const fetchEvent = async () => {
+        const fetchEventAndBooking = async () => {
             try {
                 const { data } = await api.get(`/events/${id}`);
                 setEvent(data);
+
+                if (user) {
+                    try {
+                        const myRes = await api.get('/bookings/my');
+                        const found = myRes.data.find(b => (b.eventId?._id === id || b.eventId === id) && b.status !== 'cancelled');
+                        if (found) {
+                            setExistingBooking(found);
+                        }
+                    } catch (e) {
+                        // ignore booking check failure
+                    }
+                }
             } catch (err) {
                 setError('Failed to load event details.');
             } finally {
                 setLoading(false);
             }
         };
-        fetchEvent();
-    }, [id]);
+        fetchEventAndBooking();
+    }, [id, user]);
 
     const handleBooking = async () => {
         if (!user) {
             navigate('/login');
             return;
         }
+        if (existingBooking) {
+            navigate('/dashboard');
+            return;
+        }
+
         setBookingLoading(true);
         setError('');
         setSuccessMsg('');
@@ -43,18 +61,25 @@ const EventDetail = () => {
             if (!showOTP) {
                 const res = await api.post('/bookings/send-otp');
                 setShowOTP(true);
-                setSuccessMsg(res.data?.message || 'OTP sent to your email. Please verify to continue.');
+                setSuccessMsg(res.data?.message || 'Verification code sent. Please confirm to book.');
                 if (res.data?.demoOtp) {
                     setOtp(res.data.demoOtp);
                 }
             } else {
-                await api.post('/bookings', { eventId: event._id, otp });
-                setSuccessMsg('Booking request submitted! It is awaiting admin confirmation. Check your Dashboard.');
+                const bookRes = await api.post('/bookings', { eventId: event._id, otp });
+                setSuccessMsg('Booking request submitted! It is awaiting admin confirmation.');
                 setShowOTP(false);
                 setOtp('');
+                if (bookRes.data?.booking) {
+                    setExistingBooking(bookRes.data.booking);
+                }
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Booking failed');
+            const msg = err.response?.data?.message || 'Booking failed';
+            setError(msg);
+            if (msg.includes('already have an active or pending booking')) {
+                setExistingBooking({ status: 'pending', paymentStatus: 'not_paid' });
+            }
         } finally {
             setBookingLoading(false);
         }
@@ -147,18 +172,59 @@ const EventDetail = () => {
                             </div>
                         )}
 
+                        {existingBooking && (
+                            <div className="mb-4 p-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-900 text-sm">
+                                <p className="font-bold">You have an active booking for this event.</p>
+                                <p className="text-xs text-blue-700 mt-0.5">Status: <span className="font-bold uppercase">{existingBooking.status}</span></p>
+                            </div>
+                        )}
+
                         <button
                             onClick={handleBooking}
                             disabled={isSoldOut || bookingLoading || (showOTP && !otp)}
-                            className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition shadow-lg ${isSoldOut || (successMsg && !showOTP)
+                            className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition shadow-lg ${isSoldOut
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : existingBooking
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
                                 : 'bg-gray-900 hover:bg-black text-white hover:shadow-xl hover:-translate-y-1'
                                 }`}
                         >
-                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : 'Confirm Registration')))}
+                            {bookingLoading
+                                ? 'Processing...'
+                                : existingBooking
+                                ? 'View in Dashboard'
+                                : showOTP
+                                ? 'Verify OTP & Submit Booking'
+                                : successMsg && !showOTP
+                                ? 'Request Sent'
+                                : isSoldOut
+                                ? 'Sold Out'
+                                : 'Confirm Registration'}
                         </button>
-                        {error && <p className="text-red-500 mt-4 text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
-                        {successMsg && <p className="text-green-600 mt-4 text-center font-medium bg-green-50 p-2 rounded">{successMsg}</p>}
+                        {error && (
+                            <div className="text-red-500 mt-4 text-center font-medium bg-red-50 p-3 rounded">
+                                <p>{error}</p>
+                                {error.includes('already have an active or pending booking') && (
+                                    <button
+                                        onClick={() => navigate('/dashboard')}
+                                        className="mt-2 text-xs font-bold text-blue-600 underline block mx-auto"
+                                    >
+                                        Go to Dashboard
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                        {successMsg && (
+                            <div className="text-green-700 mt-4 text-center font-medium bg-green-50 p-3 rounded border border-green-200">
+                                <p>{successMsg}</p>
+                                <button
+                                    onClick={() => navigate('/dashboard')}
+                                    className="mt-2 inline-block bg-green-700 text-white text-xs font-bold py-1.5 px-4 rounded hover:bg-green-800 transition"
+                                >
+                                    Open Dashboard
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

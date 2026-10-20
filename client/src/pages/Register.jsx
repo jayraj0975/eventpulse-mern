@@ -20,9 +20,12 @@ const Register = () => {
         setError('');
         try {
             if (!showOTP) {
-                await register(name, email, password);
+                const res = await register(name, email, password);
                 setShowOTP(true);
                 setError('');
+                if (res?.demoOtp) {
+                    setOtp(res.demoOtp);
+                }
             } else {
                 await verifyOTP(email, otp);
                 navigate('/dashboard');
