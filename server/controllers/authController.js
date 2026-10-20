@@ -84,6 +84,9 @@ exports.login = async (req, res) => {
             token: generateToken(user.id, user.role)
         });
     } catch (error) {
+        if (process.env.NODE_ENV === 'production' && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
+            return res.status(503).json({ message: 'Email verification is temporarily unavailable. Contact the administrator.' });
+        }
         res.status(500).json({ message: 'Server Error' });
     }
 };
