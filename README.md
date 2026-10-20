@@ -271,7 +271,7 @@ npm run install:all
 ### 3. Seed Sample Database
 Populate safe, realistic sample data (10 users, 6 categorized events, 20+ bookings, and synchronized indexes):
 ```bash
-ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm run seed --prefix server
+ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev npm run seed --prefix server
 ```
 Default accounts created:
 * **Admin Account:** `admin@eventpulse.com` / `password123`
@@ -316,13 +316,13 @@ All verifications can be executed via standard npm scripts:
 These are the configured public URLs; check them immediately before a presentation. A successful deployment status alone does not prove that login, booking, analytics, or email flows work end to end.
 
 ### Safe test workflow
-- Use a disposable local/test MongoDB database whose database name contains `test` for integration tests. Set `TEST_MONGO_URI` explicitly for reproducibility; outside production, the scripts default to a local `eventpulse_test` database. Never point either setting at a production database.
+- Use a disposable local/demo MongoDB database such as `eventpulse_dev` for seeding, and a separate `eventpulse_test` database for integration tests. Set `TEST_MONGO_URI` explicitly for reproducibility; never point either setting at production.
 - Example (local MongoDB):
   ```bash
   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test
   ```
 - Run `npm run lint` and `npm run build` separately. Report only the checks that actually completed successfully in your environment or in a recorded CI run.
-- **Do not run `ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm run seed --prefix server` against production.** Seeding is intended for a disposable development/demo database and may replace existing sample data.
+- **Do not run `ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev npm run seed --prefix server` against production.** Seeding is intended for a disposable development/demo database and may replace existing sample data.
 - The documented demo credentials are seeded sample credentials for a disposable local/demo database. Demo checkout is disabled in production; production bookings must use normal OTP verification. Do not assume seeded accounts exist on the public deployment.
 
 ### Presentation assets
