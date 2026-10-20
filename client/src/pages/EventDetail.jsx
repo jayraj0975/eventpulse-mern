@@ -40,7 +40,8 @@ const EventDetail = () => {
         setSuccessMsg('');
 
         try {
-            const isDemoUser = user.email?.toLowerCase() === 'user@eventpulse.com';
+            // The simulated checkout is strictly local-development only. Production must use OTP.
+            const isDemoUser = import.meta.env.DEV && user.email?.toLowerCase() === 'user@eventpulse.com';
 
             if (isDemoUser) {
                 // The backend only permits this shortcut when DEMO_MODE=true.
@@ -140,7 +141,7 @@ const EventDetail = () => {
                             </div>
                         </div>
 
-                        {user?.email?.toLowerCase() === 'user@eventpulse.com' && (
+                        {import.meta.env.DEV && import.meta.env.DEV && user?.email?.toLowerCase() === 'user@eventpulse.com' && (
                             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Demo account: checkout is simulated for this college demonstration. No real money will be charged.</p>
                         )}
 
@@ -167,7 +168,7 @@ const EventDetail = () => {
                                 : 'bg-gray-900 hover:bg-black text-white hover:shadow-xl hover:-translate-y-1'
                                 }`}
                         >
-                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : (user?.email?.toLowerCase() === 'user@eventpulse.com' ? 'Demo Checkout' : 'Confirm Registration'))))}
+                            {bookingLoading ? 'Processing...' : (showOTP ? 'Verify OTP & Submit Booking' : (successMsg && !showOTP ? 'Request Sent' : (isSoldOut ? 'Sold Out' : (import.meta.env.DEV && user?.email?.toLowerCase() === 'user@eventpulse.com' ? 'Demo Checkout' : 'Confirm Registration'))))}
                         </button>
                         {error && <p className="text-red-500 mt-4 text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
                         {successMsg && <p className="text-green-600 mt-4 text-center font-medium bg-green-50 p-2 rounded">{successMsg}</p>}
