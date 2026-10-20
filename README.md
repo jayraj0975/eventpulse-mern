@@ -11,6 +11,7 @@ An event-management and ticket-booking web platform enhanced with real database 
 * **Backend Health Check:** [https://api-production-ba9f.up.railway.app/api/health](https://api-production-ba9f.up.railway.app/api/health)
 * **Viva Demonstration Guide:** [VIVA_GUIDE.md](./VIVA_GUIDE.md)
 * **Comprehensive Project Handbook (PDF):** [Eventora_AD_Handbook.pdf](./Eventora_AD_Handbook.pdf)
+* **Current Deployment & Viva Safety Addendum:** [Eventora_AD_Handbook_Addendum.md](./Eventora_AD_Handbook_Addendum.md)
 * **Postman API Collection:** [Eventora_Postman_Collection.json](./Eventora_Postman_Collection.json)
 * **System Architecture Flowchart:** [fc.png](./fc.png)
 * **Data Flow Diagram (DFD):** [dfd.png](./dfd.png)
@@ -18,8 +19,8 @@ An event-management and ticket-booking web platform enhanced with real database 
 #### Demo Credentials (Seeded)
 | Role | Email | Password | Privileges |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@eventpulse.com` | `password123` | Full organizer access, approval queue, analytics & aggregation reports |
-| **Demo User** | `user@eventpulse.com` | `password123` | Event browsing, 1-click demo login, simulated ticket booking |
+| **Local demo admin** | `admin@eventpulse.com` | `password123` | Local/demo database only; never assume this account exists in production |
+| **Local demo user** | `user@eventpulse.com` | `password123` | Local/demo database only; demo shortcut and simulated checkout are disabled in production |
 
 ---
 
@@ -271,7 +272,7 @@ npm run install:all
 ### 3. Seed Sample Database
 Populate safe, realistic sample data (10 users, 6 categorized events, 20+ bookings, and synchronized indexes):
 ```bash
-npm run seed --prefix server
+ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev npm run seed --prefix server
 ```
 Default accounts created:
 * **Admin Account:** `admin@eventpulse.com` / `password123`
@@ -305,3 +306,32 @@ All verifications can be executed via standard npm scripts:
    In standalone (single-node) MongoDB instances without a replica set, multi-document ACID transactions (`session.withTransaction()`) require replica set configuration (`rs0`). This project achieves safe concurrency on standalone instances through single-document atomic conditional updates (`findOneAndUpdate` with `$inc` and `$gt: 0`) and programmatic compensating rollbacks.
 2. **Third-Party Email Dependency:**
    To guarantee that demonstration and grading never fail due to Google SMTP rate limits or missing app passwords, the server automatically logs all generated OTP codes directly to the terminal when live email credentials are not supplied.
+
+
+## 8. Presentation Readiness & Verification Notes
+
+### Live links
+- Frontend: https://eventpulse-mern.vercel.app
+- Backend health endpoint: https://api-production-ba9f.up.railway.app/api/health
+
+These are the configured public URLs; check them immediately before a presentation. A successful deployment status alone does not prove that login, booking, analytics, or email flows work end to end.
+
+### Safe test workflow
+- Use a disposable local/demo MongoDB database such as `eventpulse_dev` for seeding, and a separate `eventpulse_test` database for integration tests. Set `TEST_MONGO_URI` explicitly for reproducibility; never point either setting at production.
+- Example (local MongoDB):
+  ```bash
+  TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test
+  ```
+- Run `npm run lint` and `npm run build` separately. Report only the checks that actually completed successfully in your environment or in a recorded CI run.
+- **Do not run `ALLOW_DEMO_SEED=true MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_dev npm run seed --prefix server` against production.** Seeding is intended for a disposable development/demo database and may replace existing sample data.
+- The documented demo credentials are seeded sample credentials for a disposable local/demo database. Demo checkout is disabled in production; production bookings must use normal OTP verification. Do not assume seeded accounts exist on the public deployment.
+
+### Presentation assets
+- [Viva demonstration guide](./VIVA_GUIDE.md)
+- [Local setup guide](./SETUP_GUIDE.md)
+- [AD project handbook (PDF)](./Eventora_AD_Handbook.pdf)
+- [Postman collection](./Eventora_Postman_Collection.json)
+- [Data flow diagram](./dfd.png) · [System flowchart](./fc.png)
+
+### Verification status policy
+The repository contains automated test scripts and a GitHub Actions workflow. This README does not assert that the latest commit has passed every workflow or that the live application has passed a browser-based end-to-end test. Verify the current commit's CI checks and perform a live smoke test before presenting.

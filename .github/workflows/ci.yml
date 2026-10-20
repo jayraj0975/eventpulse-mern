@@ -42,6 +42,7 @@ jobs:
         run: npm run seed --prefix server
         env:
           MONGO_URI: mongodb://127.0.0.1:27017/eventpulse_test
+          ALLOW_DEMO_SEED: 'true'
       - name: Run backend integration tests
         run: npm test --prefix server
         env:

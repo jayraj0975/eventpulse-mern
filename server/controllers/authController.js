@@ -1,10 +1,11 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendOTPEmail } = require('../utils/email');
 
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -42,7 +43,7 @@ exports.register = async (req, res) => {
             demoOtp: isDevNoEmail ? otp : undefined
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -68,7 +69,7 @@ exports.login = async (req, res) => {
             await sendOTPEmail(user.email, otp, 'account_verification');
             return res.status(403).json({
                 message: !process.env.EMAIL_USER
-                    ? 'Account not verified. (Demo mode: Use OTP 123456)'
+                    ? 'Account not verified. Check the local server output for the verification code.'
                     : 'Account not verified. A new OTP has been sent to your email.',
                 needsVerification: true,
                 email: user.email
@@ -83,14 +84,17 @@ exports.login = async (req, res) => {
             token: generateToken(user.id, user.role)
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        if (process.env.NODE_ENV === 'production' && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
+            return res.status(503).json({ message: 'Email verification is temporarily unavailable. Contact the administrator.' });
+        }
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
 exports.verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
-        const isDemoBypass = process.env.NODE_ENV !== 'production' && !process.env.EMAIL_USER && (otp === '123456' || otp === '000000');
+        const isDemoBypass = process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production' && !process.env.EMAIL_USER && otp === '123456';
         const validOTP = await OTP.findOne({ email, otp, action: 'account_verification' });
 
         if (!validOTP && !isDemoBypass) {
