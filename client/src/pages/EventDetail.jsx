@@ -141,7 +141,7 @@ const EventDetail = () => {
                             </div>
                         </div>
 
-                        {import.meta.env.DEV && user?.email?.toLowerCase() === 'user@eventpulse.com' && (
+                        {import.meta.env.DEV && import.meta.env.DEV && user?.email?.toLowerCase() === 'user@eventpulse.com' && (
                             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Demo account: checkout is simulated for this college demonstration. No real money will be charged.</p>
                         )}
 
