@@ -305,3 +305,32 @@ All verifications can be executed via standard npm scripts:
    In standalone (single-node) MongoDB instances without a replica set, multi-document ACID transactions (`session.withTransaction()`) require replica set configuration (`rs0`). This project achieves safe concurrency on standalone instances through single-document atomic conditional updates (`findOneAndUpdate` with `$inc` and `$gt: 0`) and programmatic compensating rollbacks.
 2. **Third-Party Email Dependency:**
    To guarantee that demonstration and grading never fail due to Google SMTP rate limits or missing app passwords, the server automatically logs all generated OTP codes directly to the terminal when live email credentials are not supplied.
+
+
+## 8. Presentation Readiness & Verification Notes
+
+### Live links
+- Frontend: https://eventpulse-mern.vercel.app
+- Backend health endpoint: https://api-production-ba9f.up.railway.app/api/health
+
+These are the configured public URLs; check them immediately before a presentation. A successful deployment status alone does not prove that login, booking, analytics, or email flows work end to end.
+
+### Safe test workflow
+- Use a disposable local/test MongoDB database whose database name contains `test` for integration tests. The test scripts require `TEST_MONGO_URI`; never point it at a production database.
+- Example (local MongoDB):
+  ```bash
+  TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test
+  ```
+- Run `npm run lint` and `npm run build` separately. Report only the checks that actually completed successfully in your environment or in a recorded CI run.
+- **Do not run `npm run seed --prefix server` against production.** Seeding is intended for a disposable development/demo database and may replace existing sample data.
+- The documented demo credentials are seeded sample credentials, not private production credentials. Keep demo mode disabled in production and do not use these accounts for real customer data.
+
+### Presentation assets
+- [Viva demonstration guide](./VIVA_GUIDE.md)
+- [Local setup guide](./SETUP_GUIDE.md)
+- [AD project handbook (PDF)](./Eventora_AD_Handbook.pdf)
+- [Postman collection](./Eventora_Postman_Collection.json)
+- [Data flow diagram](./dfd.png) · [System flowchart](./fc.png)
+
+### Verification status policy
+The repository contains automated test scripts and a GitHub Actions workflow. This README does not assert that the latest commit has passed every workflow or that the live application has passed a browser-based end-to-end test. Verify the current commit's CI checks and perform a live smoke test before presenting.
