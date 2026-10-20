@@ -20,10 +20,11 @@ Follow this exact sequence to demonstrate the project to the examiner:
    * *"Notice that `syncIndexes()` runs automatically, ensuring compound indexes and partial unique indexes are created in MongoDB before any operations begin."*
 
 ### Step 2: Show the Query Plan Optimization (`explain()`) (45 seconds)
-1. In the terminal, run:
+1. In the terminal, run against a disposable test database (the database name must contain `test`):
    ```bash
-   node server/scripts/verify-indexes-and-queries.js
+   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test node server/scripts/verify-indexes-and-queries.js
    ```
+   For the complete suite, use `TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test`. Never run integration tests against production.
 2. Point to the terminal output:
    * *"Here is our query plan verification. For the user booking history query, MongoDB uses an Index Scan (`IXSCAN`) via the compound index `{ userId: 1, createdAt: -1 }` instead of a full collection scan (`COLLSCAN`)."*
    * *"Total documents examined matches the total keys examined, which minimizes memory and CPU overhead."*
