@@ -22,7 +22,7 @@ Follow this exact sequence to demonstrate the project to the examiner:
 ### Step 2: Show the Query Plan Optimization (`explain()`) (45 seconds)
 1. In the terminal, run against a disposable test database (the database name must contain `test`):
    ```bash
-   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test node server/scripts/verify-indexes-and-queries.js
+   TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test node server/scripts/verify-indexes-and-queries.js
    ```
    For the complete suite, use `TEST_MONGO_URI=mongodb://127.0.0.1:27017/eventpulse_test npm test`. Never run integration tests against production.
 2. Point to the terminal output:
@@ -30,9 +30,9 @@ Follow this exact sequence to demonstrate the project to the examiner:
    * *"Total documents examined matches the total keys examined, which minimizes memory and CPU overhead."*
 
 ### Step 3: Demonstrate User Booking & OTP Verification (45 seconds)
-1. Start the app: `npm run dev`.
-2. Open browser at `http://localhost:5173`.
-3. Log in as regular user (`user@eventpulse.com` / `password123`).
+1. Run the demo locally with `DEMO_MODE=true` in the local development environment, then start the app with `npm run dev`. The production deployment intentionally does not enable OTP bypass or simulated checkout.
+2. Open browser at `http://localhost:5173` (local demo only for the shortcut flow).
+3. Log in as the seeded local demo user (`user@eventpulse.com` / `password123`).
 4. Click on an event (e.g. "React & Node.js Developer Retreat") and click **Book Ticket**.
 5. Show the OTP dialog:
    * *"The backend generates a 6-digit cryptographic OTP stored with a 300-second TTL in MongoDB."*
